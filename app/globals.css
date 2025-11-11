@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html[data-font='lg'] { font-size: 18px; }
+html[data-font='xl'] { font-size: 20px; }
+
+html[data-contrast='true'] .hc { outline: 2px solid #000; }
+
+.card {
+  @apply rounded-2xl shadow-md bg-token-bg-base p-card;
+}
+
+.section {
+  @apply px-4 py-section;
+}
+
+.btn {
+  @apply h-14 min-w-[44px] rounded-2xl px-4 font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 active:scale-[0.99] transition;
+}
+
+.btn-green { @apply bg-token-signal-green text-white; }
+.btn-amber { @apply bg-token-signal-yellow text-white; }
+.btn-red { @apply bg-token-signal-red text-white; }
+
