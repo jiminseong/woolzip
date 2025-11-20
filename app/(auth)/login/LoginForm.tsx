@@ -23,22 +23,21 @@ export default function LoginForm() {
 
       if (isSignUp) {
         // 회원가입: username 중복 체크 후 진행
-        const { data: existingUser } = (await supabase
+        const { data: existingUsers } = (await supabase
           .from("users")
           .select("username")
-          .eq("username", username)
-          .single()) as {
-          data: { username: string } | null;
+          .eq("username", username)) as {
+          data: { username: string }[] | null;
           error: any;
         };
 
-        if (existingUser) {
+        if (existingUsers && existingUsers.length > 0) {
           setError("이미 사용중인 ID입니다");
           return;
         }
 
         // Supabase Auth에 임시 이메일로 가입 (내부용)
-        const tempEmail = `${username}@woolzip.local`;
+        const tempEmail = `${username}@example.com`;
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: tempEmail,
           password,
@@ -72,20 +71,20 @@ export default function LoginForm() {
         router.replace("/onboarding");
       } else {
         // 로그인: username으로 사용자 조회 후 email로 Supabase 인증
-        const { data: userData, error: userError } = (await supabase
+        const { data: userList, error: userError } = (await supabase
           .from("users")
           .select("email")
-          .eq("username", username)
-          .single()) as {
-          data: { email: string } | null;
+          .eq("username", username)) as {
+          data: { email: string }[] | null;
           error: any;
         };
 
-        if (userError || !userData?.email) {
+        if (userError || !userList || userList.length === 0 || !userList[0].email) {
           setError("사용자를 찾을 수 없습니다");
           return;
         }
 
+        const userData = userList[0];
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: userData.email,
           password,
