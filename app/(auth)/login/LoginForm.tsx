@@ -37,7 +37,7 @@ export default function LoginForm() {
         }
 
         // Supabase Auth에 임시 이메일로 가입 (내부용)
-        const tempEmail = `${username}@example.com`;
+        const tempEmail = `${username}@gmail.com`;
         const { data, error: signUpError } = await supabase.auth.signUp({
           email: tempEmail,
           password,
