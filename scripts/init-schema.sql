@@ -7,8 +7,9 @@ create extension if not exists "uuid-ossp";
 -- Users table (Supabase Auth와 연동)
 create table public.users (
   id uuid primary key default auth.uid(),
-  email text unique,
-  display_name text,
+  username text unique not null, -- 로그인용 ID (예: myid123)
+  email text unique, -- Supabase Auth 이메일 (내부용)
+  display_name text, -- 가족이 보는 이름 (예: 엄마, 아빠)
   avatar_url text,
   locale text default 'ko-KR',
   created_at timestamptz default now()

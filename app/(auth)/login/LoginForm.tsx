@@ -3,10 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { Database } from "@/lib/database.types";
 
 export default function LoginForm() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -21,27 +22,80 @@ export default function LoginForm() {
       const supabase = getSupabaseBrowserClient();
 
       if (isSignUp) {
-        // 회원가입
-        const { error: signUpError } = await supabase.auth.signUp({
-          email,
+        // 회원가입: username 중복 체크 후 진행
+        const { data: existingUser } = await supabase
+          .from('users')
+          .select('username')
+          .eq('username', username)
+          .single() as {
+            data: { username: string } | null;
+            error: any;
+          };
+
+        if (existingUser) {
+          setError('이미 사용중인 ID입니다');
+          return;
+        }
+
+        // Supabase Auth에 임시 이메일로 가입 (내부용)
+        const tempEmail = `${username}@woolzip.local`;
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: tempEmail,
           password,
           options: {
             emailRedirectTo: undefined, // 이메일 인증 비활성화
           },
         });
+
         if (signUpError) {
           setError(signUpError.message);
           return;
         }
+
+        if (data.user) {
+          // Create user profile with username
+          const { error: profileError } = await (supabase.from("users") as any).insert([
+            {
+              id: data.user.id,
+              username,
+              email: data.user.email,
+            },
+          ]);
+
+          if (profileError) {
+            setError("사용자 프로필 생성에 실패했습니다");
+            return;
+          }
+        }
+
         // 회원가입 성공 시 자동으로 로그인 상태가 됩니다
         router.replace("/onboarding");
       } else {
-        // 로그인
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-        if (signInError) {
-          setError(signInError.message);
+        // 로그인: username으로 사용자 조회 후 email로 Supabase 인증
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('email')
+          .eq('username', username)
+          .single() as { 
+            data: { email: string } | null; 
+            error: any 
+          };
+
+        if (userError || !userData?.email) {
+          setError('사용자를 찾을 수 없습니다');
           return;
         }
+
+        const { error: signInError } = await supabase.auth.signInWithPassword({ 
+          email: userData.email, 
+          password 
+        });
+
+        if (signInError) {
+          setError("ID 또는 비밀번호가 올바르지 않습니다");
+          return;
+        }
+
         router.replace("/");
       }
       router.refresh();
@@ -67,12 +121,12 @@ export default function LoginForm() {
         <label className="block space-y-1">
           <span className="text-sm font-medium">ID</span>
           <input
-            name="email"
-            type="email"
+            name="id"
+            type="text"
             required
             autoComplete={isSignUp ? "email" : "username"}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
             className="w-full rounded-xl border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
             placeholder="myid123"
           />
