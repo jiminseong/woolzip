@@ -1,8 +1,14 @@
+import { redirect } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import EmotionComposer from '@/components/EmotionComposer'
 import TakePillButton from '@/components/TakePillButton'
+import SignOutButton from '@/components/SignOutButton'
+import { getSession } from '@/lib/supabase/server'
 
-export default function MePage() {
+export default async function MePage() {
+  const { session } = await getSession()
+  if (!session) redirect('/login')
+
   return (
     <div className="flex flex-col min-h-dvh">
       <header className="section">
@@ -18,6 +24,9 @@ export default function MePage() {
             <div className="flex items-center justify-between"><span>큰 글자 모드</span><input type="checkbox" /></div>
             <div className="flex items-center justify-between"><span>고대비</span><input type="checkbox" /></div>
             <div className="flex items-center justify-between"><span>푸시 허용</span><input type="checkbox" /></div>
+          </div>
+          <div className="pt-4">
+            <SignOutButton />
           </div>
         </div>
 
@@ -41,4 +50,3 @@ export default function MePage() {
     </div>
   )
 }
-

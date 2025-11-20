@@ -1,8 +1,13 @@
+import { redirect } from 'next/navigation'
 import BottomNav from '@/components/BottomNav'
 import TodaySummaryCard from '@/components/TodaySummaryCard'
 import TimelineItem from '@/components/TimelineItem'
+import { getSession } from '@/lib/supabase/server'
 
-export default function Page() {
+export default async function Page() {
+  const { session } = await getSession()
+  if (!session) redirect('/login')
+
   const members = [
     { id: '1', name: '엄마', last: '귀가 18:40', gyrc: { g: 2, y: 0, r: 0 }, med: true },
     { id: '2', name: '아빠', last: '식사 12:10', gyrc: { g: 1, y: 1, r: 0 }, med: false },
@@ -33,4 +38,3 @@ export default function Page() {
     </div>
   )
 }
-
