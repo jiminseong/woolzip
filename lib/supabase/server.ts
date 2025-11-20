@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient, Session } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import type { Database } from "../database.types";
 
 function getSupabaseEnv() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -13,10 +14,12 @@ function getSupabaseEnv() {
   return { supabaseUrl, supabaseKey };
 }
 
-export async function createSupabaseServerClient(): Promise<SupabaseClient> {
+type TypedSupabaseClient = SupabaseClient<Database>;
+
+export async function createSupabaseServerClient(): Promise<TypedSupabaseClient> {
   const cookieStore = await cookies();
   const { supabaseKey, supabaseUrl } = getSupabaseEnv();
-  return createServerClient(supabaseUrl, supabaseKey, {
+  return createServerClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
       get(name) {
         return cookieStore.get(name)?.value;
@@ -31,7 +34,10 @@ export async function createSupabaseServerClient(): Promise<SupabaseClient> {
   });
 }
 
-export async function getSession(): Promise<{ session: Session | null; supabase: SupabaseClient }> {
+export async function getSession(): Promise<{
+  session: Session | null;
+  supabase: TypedSupabaseClient;
+}> {
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getSession();
   if (error) {
