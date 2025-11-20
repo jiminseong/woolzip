@@ -23,17 +23,17 @@ export default function LoginForm() {
 
       if (isSignUp) {
         // 회원가입: username 중복 체크 후 진행
-        const { data: existingUser } = await supabase
-          .from('users')
-          .select('username')
-          .eq('username', username)
-          .single() as {
-            data: { username: string } | null;
-            error: any;
-          };
+        const { data: existingUser } = (await supabase
+          .from("users")
+          .select("username")
+          .eq("username", username)
+          .single()) as {
+          data: { username: string } | null;
+          error: any;
+        };
 
         if (existingUser) {
-          setError('이미 사용중인 ID입니다');
+          setError("이미 사용중인 ID입니다");
           return;
         }
 
@@ -72,23 +72,23 @@ export default function LoginForm() {
         router.replace("/onboarding");
       } else {
         // 로그인: username으로 사용자 조회 후 email로 Supabase 인증
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('email')
-          .eq('username', username)
-          .single() as { 
-            data: { email: string } | null; 
-            error: any 
-          };
+        const { data: userData, error: userError } = (await supabase
+          .from("users")
+          .select("email")
+          .eq("username", username)
+          .single()) as {
+          data: { email: string } | null;
+          error: any;
+        };
 
         if (userError || !userData?.email) {
-          setError('사용자를 찾을 수 없습니다');
+          setError("사용자를 찾을 수 없습니다");
           return;
         }
 
-        const { error: signInError } = await supabase.auth.signInWithPassword({ 
-          email: userData.email, 
-          password 
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: userData.email,
+          password,
         });
 
         if (signInError) {
@@ -107,7 +107,7 @@ export default function LoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card space-y-4">
+    <form onSubmit={handleSubmit} className="card w-full space-y-4">
       <div>
         <div className="text-lg font-semibold">
           {isSignUp ? "가족과 함께 시작하기" : "울집에 돌아오신 걸 환영해요"}
