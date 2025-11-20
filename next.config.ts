@@ -1,11 +1,8 @@
-import type { NextConfig } from 'next'
+import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  experimental: {
-    reactCompiler: true
-  }
-}
+  // reactCompiler: true // 현재 실험적 기능으로 비활성화
+};
 
-export default nextConfig
-
+export default nextConfig;
