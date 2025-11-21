@@ -7,33 +7,30 @@ export interface Database {
       users: {
         Row: {
           id: string;
-          username: string | null;
+          username: string;
           email: string | null;
           display_name: string | null;
           avatar_url: string | null;
           locale: string | null;
           created_at: string | null;
-          kakao_id: string | null;
         };
         Insert: {
           id?: string;
-          username?: string | null;
+          username: string;
           email?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
           locale?: string | null;
           created_at?: string | null;
-          kakao_id?: string | null;
         };
         Update: {
           id?: string;
-          username?: string | null;
+          username?: string;
           email?: string | null;
           display_name?: string | null;
           avatar_url?: string | null;
           locale?: string | null;
           created_at?: string | null;
-          kakao_id?: string | null;
         };
       };
       families: {

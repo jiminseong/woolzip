@@ -2,27 +2,96 @@
 
 import { useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function LoginForm() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  async function handleKakaoLogin() {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!username.trim() || !password.trim()) {
+      setError("ID와 비밀번호를 모두 입력해주세요.");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       const supabase = getSupabaseBrowserClient();
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "kakao",
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      });
+      if (isSignUp) {
+        // 1. username 중복 체크
+        const { data: existingUsers } = await supabase
+          .from("users")
+          .select("username")
+          .eq("username", username);
 
-      if (error) {
-        setError(error.message);
+        if (existingUsers && existingUsers.length > 0) {
+          setError("이미 사용 중인 ID입니다.");
+          return;
+        }
+
+        // 2. 임시 이메일로 Supabase Auth 가입
+        const tempEmail = `${username}@woolzip.temp`;
+        const { data: authData, error: signUpError } = await supabase.auth.signUp({
+          email: tempEmail,
+          password,
+        });
+
+        if (signUpError) {
+          setError(signUpError.message);
+          return;
+        }
+
+        if (authData.user) {
+          // 3. users 테이블에 프로필 생성
+          const { error: profileError } = await (supabase.from("users") as any).insert({
+            id: authData.user.id,
+            username,
+            email: tempEmail,
+          });
+
+          if (profileError) {
+            setError("프로필 생성에 실패했습니다.");
+            return;
+          }
+
+          // 온보딩으로 이동
+          router.push("/onboarding");
+        }
+      } else {
+        // 로그인: username으로 email 찾기
+        const { data: userData } = (await supabase
+          .from("users")
+          .select("email")
+          .eq("username", username)
+          .single()) as { data: { email: string } | null; error: any };
+
+        if (!userData?.email) {
+          setError("존재하지 않는 ID입니다.");
+          return;
+        }
+
+        // Supabase Auth로 로그인
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: userData.email,
+          password,
+        });
+
+        if (signInError) {
+          setError("ID 또는 비밀번호가 틀렸습니다.");
+          return;
+        }
+
+        // 메인 화면으로 이동
+        router.push("/");
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했어요.");
@@ -34,9 +103,11 @@ export default function LoginForm() {
   return (
     <div className="card space-y-6">
       <div>
-        <div className="text-lg font-semibold">울집에 오신 걸 환영해요</div>
+        <div className="text-lg font-semibold">
+          {isSignUp ? "울집에 오신 걸 환영해요" : "다시 만나서 반가워요"}
+        </div>
         <p className="text-sm text-token-text-secondary mt-1">
-          카카오 계정으로 간편하게 시작하세요
+          {isSignUp ? "간단한 정보로 가족과 연결해보세요" : "가족들이 기다리고 있어요"}
         </p>
       </div>
 
@@ -46,32 +117,68 @@ export default function LoginForm() {
         </div>
       )}
 
-      <div className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="username" className="block text-sm font-medium mb-2">
+            ID
+          </label>
+          <input
+            type="text"
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="영문, 숫자로 입력해주세요"
+            className="w-full h-12 px-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-token-signal-green focus:border-transparent"
+            autoComplete={isSignUp ? "username" : "username"}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium mb-2">
+            비밀번호
+          </label>
+          <input
+            type="password"
+            id="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder={isSignUp ? "6자 이상 입력해주세요" : "비밀번호를 입력해주세요"}
+            className="w-full h-12 px-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-token-signal-green focus:border-transparent"
+            autoComplete={isSignUp ? "new-password" : "current-password"}
+            minLength={isSignUp ? 6 : undefined}
+          />
+        </div>
+
         <button
-          type="button"
-          onClick={handleKakaoLogin}
+          type="submit"
           disabled={loading}
-          className="w-full h-12 bg-[#FEE500] hover:bg-[#FFEB3B] text-[#000000] font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-          aria-label="카카오 계정으로 로그인"
+          className="w-full h-12 bg-token-signal-green hover:bg-green-600 text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          <svg width="20" height="18" viewBox="0 0 20 18" fill="none" className="flex-shrink-0">
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M10 0C4.477 0 0 3.26 0 7.297c0 2.637 1.787 4.95 4.465 6.37-.186-.677-.344-1.72-.074-2.478.245-.688 1.586-6.739 1.586-6.739s-.404-.808-.404-2.002c0-1.875 1.087-3.274 2.44-3.274 1.15 0 1.706.863 1.706 1.899 0 1.156-.736 2.886-1.116 4.489-.317 1.342.673 2.436 1.998 2.436 2.397 0 4.008-3.081 4.008-6.747 0-2.785-1.878-4.869-5.289-4.869-3.847 0-6.235 2.834-6.235 5.993 0 1.094.323 1.872.823 2.463a.41.41 0 01.094.394c-.104.435-.335 1.369-.38 1.563-.058.25-.19.302-.439.182-1.686-.688-2.481-2.594-2.481-4.725 0-3.434 2.889-7.553 8.619-7.553 4.473 0 7.436 3.118 7.436 6.469 0 4.436-2.403 7.78-5.944 7.78-1.197 0-2.323-.646-2.708-1.467 0 0-.65 2.571-.782 3.071-.236.81-.694 1.456-1.153 2.045C7.63 17.76 8.784 18 10 18c5.523 0 10-3.26 10-7.297C20 3.26 15.523 0 10 0z"
-              fill="currentColor"
-            />
-          </svg>
-          {loading ? "로그인 중..." : "카카오로 시작하기"}
+          {loading ? "처리 중..." : isSignUp ? "🎉 계정 만들기" : "로그인하기"}
         </button>
 
+        <div className="text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setIsSignUp(!isSignUp);
+              setError(null);
+            }}
+            className="text-sm text-token-text-secondary hover:text-token-signal-green underline"
+          >
+            {isSignUp ? "이미 계정이 있으신가요? 로그인하기" : "처음 오셨나요? 계정 만들기"}
+          </button>
+        </div>
+      </form>
+
+      {isSignUp && (
         <div className="text-xs text-token-text-secondary text-center px-4">
-          로그인하면 울집의{" "}
+          가입하면 울집의{" "}
           <button className="underline hover:text-token-signal-green">서비스 약관</button>과{" "}
           <button className="underline hover:text-token-signal-green">개인정보 처리방침</button>에
           동의하는 것으로 간주됩니다.
         </div>
-      </div>
+      )}
     </div>
   );
 }
