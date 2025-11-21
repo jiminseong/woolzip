@@ -20,6 +20,8 @@ export default function AddPageClient() {
   function handleUndo() {
     setToastUntil(null);
     setSignalId(null);
+    // 페이지 새로고침하여 홈 화면 업데이트
+    window.location.href = "/";
   }
 
   return (

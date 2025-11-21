@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import BottomNav from "@/components/BottomNav";
 import TodaySummaryCard from "@/components/TodaySummaryCard";
 import TimelineItem from "@/components/TimelineItem";
+import RealtimeProvider from "@/components/RealtimeProvider";
 import { getSession, createSupabaseServerClient } from "@/lib/supabase/server";
 
 async function getFamilyData(userId: string) {
@@ -23,7 +24,7 @@ async function getFamilyData(userId: string) {
     .single();
 
   if (!familyMember) {
-    return { members: [], timeline: [], familyName: null };
+    return { members: [], timeline: [], familyName: null, familyId: null };
   }
 
   const familyId = familyMember.family_id;
@@ -174,6 +175,7 @@ async function getFamilyData(userId: string) {
     members: memberSummaries,
     timeline,
     familyName: familyMember.families?.name || "가족",
+    familyId: familyId,
   };
 }
 
@@ -219,37 +221,38 @@ export default async function Page() {
     redirect("/onboarding");
   }
 
-  const { members, timeline, familyName } = await getFamilyData(session.user.id);
-
+  const { members, timeline, familyName, familyId } = await getFamilyData(session.user.id);
   return (
-    <div className="flex flex-col min-h-dvh">
-      <header className="section">
-        <h1 className="text-2xl font-bold">오늘 요약</h1>
-        <p className="text-sm text-token-text-secondary">{familyName}</p>
-      </header>
-      <main className="flex-1 px-4 pb-24 space-y-4">
-        <TodaySummaryCard members={members} />
-        <div className="card">
-          <div className="text-lg font-semibold mb-2">타임라인</div>
-          {timeline.length > 0 ? (
-            timeline.map((item) => (
-              <TimelineItem
-                key={item.id}
-                kind={item.kind}
-                title={item.title}
-                time={item.time}
-                color={"color" in item ? item.color : undefined}
-              />
-            ))
-          ) : (
-            <div className="text-center py-8 text-token-text-secondary">
-              <p>아직 오늘의 활동이 없습니다</p>
-              <p className="text-sm">+ 버튼을 눌러 첫 신호를 보내보세요!</p>
-            </div>
-          )}
-        </div>
-      </main>
-      <BottomNav />
-    </div>
+    <RealtimeProvider familyId={familyId}>
+      <div className="flex flex-col min-h-dvh">
+        <header className="section">
+          <h1 className="text-2xl font-bold">오늘 요약</h1>
+          <p className="text-sm text-token-text-secondary">{familyName}</p>
+        </header>
+        <main className="flex-1 px-4 pb-24 space-y-4">
+          <TodaySummaryCard members={members} />
+          <div className="card">
+            <div className="text-lg font-semibold mb-2">타임라인</div>
+            {timeline.length > 0 ? (
+              timeline.map((item) => (
+                <TimelineItem
+                  key={item.id}
+                  kind={item.kind}
+                  title={item.title}
+                  time={item.time}
+                  color={"color" in item ? item.color : undefined}
+                />
+              ))
+            ) : (
+              <div className="text-center py-8 text-token-text-secondary">
+                <p>아직 오늘의 활동이 없습니다</p>
+                <p className="text-sm">+ 버튼을 눌러 첫 신호를 보내보세요!</p>
+              </div>
+            )}
+          </div>
+        </main>
+        <BottomNav />
+      </div>
+    </RealtimeProvider>
   );
 }
