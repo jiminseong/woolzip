@@ -1,16 +1,25 @@
-"use client"
-import { useState } from 'react'
-import BottomNav from '@/components/BottomNav'
-import SignalButton from '@/components/SignalButton'
-import UndoToast from '@/components/UndoToast'
+"use client";
+import { useState } from "react";
+import BottomNav from "@/components/BottomNav";
+import SignalButton from "@/components/SignalButton";
+import UndoToast from "@/components/UndoToast";
 
 export default function AddPageClient() {
-  const [toastUntil, setToastUntil] = useState<Date | null>(null)
-  const [tired, setTired] = useState(false)
+  const [toastUntil, setToastUntil] = useState<Date | null>(null);
+  const [signalId, setSignalId] = useState<string | null>(null);
+  const [tired, setTired] = useState(false);
 
-  function posted() {
-    const until = new Date(Date.now() + 5 * 60 * 1000)
-    setToastUntil(until)
+  function posted(payload: { type: string; tag?: string; id?: string; undo_until?: string }) {
+    if (payload.undo_until && payload.id) {
+      const until = new Date(payload.undo_until);
+      setToastUntil(until);
+      setSignalId(payload.id);
+    }
+  }
+
+  function handleUndo() {
+    setToastUntil(null);
+    setSignalId(null);
   }
 
   return (
@@ -23,21 +32,48 @@ export default function AddPageClient() {
           <div className="mb-3 flex items-center justify-between">
             <div className="font-medium">살짝 피곤해요</div>
             <label className="inline-flex items-center gap-2">
-              <input type="checkbox" checked={tired} onChange={e => setTired(e.target.checked)} />
+              <input type="checkbox" checked={tired} onChange={(e) => setTired(e.target.checked)} />
             </label>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <SignalButton type={tired ? 'yellow' : 'green'} tag="leave" label="출발" onPosted={posted} />
-            <SignalButton type={tired ? 'yellow' : 'green'} tag="home" label="귀가" onPosted={posted} />
-            <SignalButton type={tired ? 'yellow' : 'green'} tag="meal" label="식사" onPosted={posted} />
-            <SignalButton type={tired ? 'yellow' : 'green'} tag="sleep" label="취침" onPosted={posted} />
-            <SignalButton type={tired ? 'yellow' : 'green'} tag="wake" label="기상" onPosted={posted} />
-            <SignalButton type={'red'} tag="sos" label="SOS" onPosted={posted} />
+            <SignalButton
+              type={tired ? "yellow" : "green"}
+              tag="leave"
+              label="출발"
+              onPosted={posted}
+            />
+            <SignalButton
+              type={tired ? "yellow" : "green"}
+              tag="home"
+              label="귀가"
+              onPosted={posted}
+            />
+            <SignalButton
+              type={tired ? "yellow" : "green"}
+              tag="meal"
+              label="식사"
+              onPosted={posted}
+            />
+            <SignalButton
+              type={tired ? "yellow" : "green"}
+              tag="sleep"
+              label="취침"
+              onPosted={posted}
+            />
+            <SignalButton
+              type={tired ? "yellow" : "green"}
+              tag="wake"
+              label="기상"
+              onPosted={posted}
+            />
+            <SignalButton type={"red"} tag="sos" label="SOS" onPosted={posted} />
           </div>
         </div>
       </main>
       <BottomNav />
-      {toastUntil && <UndoToast onUndo={() => setToastUntil(null)} until={toastUntil} />}
+      {toastUntil && (
+        <UndoToast onUndo={handleUndo} until={toastUntil} signalId={signalId || undefined} />
+      )}
     </div>
-  )
+  );
 }
