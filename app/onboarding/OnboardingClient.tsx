@@ -35,18 +35,18 @@ export default function OnboardingClient() {
 
       if (!user) throw new Error("사용자 정보를 찾을 수 없습니다");
 
-      // 사용자 프로필 업데이트
-      const { error: updateError } = await supabase.from("users").upsert({
-        id: user.id,
-        email: user.email,
-        display_name: displayName.trim(),
-        locale: "ko-KR",
-      });
+      // 사용자 프로필 업데이트 (username은 이미 생성됨)
+      const { error: updateError } = await (supabase.from("users") as any)
+        .update({
+          display_name: displayName.trim(),
+          locale: "ko-KR",
+        })
+        .eq("id", user.id);
 
       if (updateError) throw updateError;
 
       // 사용자 설정 생성
-      const { error: settingsError } = await supabase.from("settings").upsert({
+      const { error: settingsError } = await (supabase.from("settings") as any).upsert({
         user_id: user.id,
         share_signals: true,
         share_meds: true,
@@ -85,8 +85,7 @@ export default function OnboardingClient() {
         }
 
         // 새 가족 생성
-        const { data: family, error: familyError } = await supabase
-          .from("families")
+        const { data: family, error: familyError } = await (supabase.from("families") as any)
           .insert({
             name: familyName.trim(),
             created_by: user.id,
@@ -97,7 +96,7 @@ export default function OnboardingClient() {
         if (familyError) throw familyError;
 
         // 가족 구성원으로 추가
-        const { error: memberError } = await supabase.from("family_members").insert({
+        const { error: memberError } = await (supabase.from("family_members") as any).insert({
           family_id: family.id,
           user_id: user.id,
           role: role,
@@ -112,37 +111,31 @@ export default function OnboardingClient() {
           return;
         }
 
-        // 초대 코드 확인
-        const { data: invite, error: inviteError } = await supabase
-          .from("invites")
-          .select("family_id")
-          .eq("code", inviteCode.trim())
-          .gt("expires_at", new Date().toISOString())
-          .is("used_by", null)
-          .single();
+        // API를 통한 초대 코드 처리
+        const response = await fetch("/api/invite/accept", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: inviteCode.trim() }),
+        });
 
-        if (inviteError || !invite) {
-          setError("유효하지 않거나 만료된 초대 코드입니다");
+        const result = await response.json();
+
+        if (!result.ok) {
+          setError(result.error?.message || "초대 코드 처리에 실패했습니다");
           return;
         }
 
-        // 가족 구성원으로 추가
-        const { error: memberError } = await supabase.from("family_members").insert({
-          family_id: invite.family_id,
-          user_id: user.id,
-          role: role,
-          is_active: true,
-        });
+        // 역할 업데이트 (API에서는 기본값 'child'로 설정됨)
+        if (role !== "child") {
+          const { error: roleError } = await (supabase.from("family_members") as any)
+            .update({ role: role })
+            .eq("family_id", result.family_id)
+            .eq("user_id", user.id);
 
-        if (memberError) throw memberError;
-
-        // 초대 코드 사용 처리
-        const { error: useError } = await supabase
-          .from("invites")
-          .update({ used_by: user.id })
-          .eq("code", inviteCode.trim());
-
-        if (useError) console.warn("초대 코드 업데이트 실패:", useError);
+          if (roleError) {
+            console.warn("역할 업데이트 실패:", roleError);
+          }
+        }
       }
 
       setStep("complete");
