@@ -76,30 +76,30 @@ export default async function MePage() {
                 <div key={med.id} className="space-y-2">
                   <div className="font-medium">{med.name}</div>
                   <div className="grid grid-cols-3 gap-2">
-                    {med.times?.includes('morning') && (
-                      <TakePillButton 
-                        medicationId={med.id} 
-                        time_slot="morning" 
-                        initialTaken={todayLogs?.some((log: any) => 
-                          log.medication_id === med.id && log.time_slot === 'morning'
+                    {med.times?.includes("morning") && (
+                      <TakePillButton
+                        medicationId={med.id}
+                        time_slot="morning"
+                        initialTaken={todayLogs?.some(
+                          (log: any) => log.medication_id === med.id && log.time_slot === "morning"
                         )}
                       />
                     )}
-                    {med.times?.includes('noon') && (
-                      <TakePillButton 
-                        medicationId={med.id} 
+                    {med.times?.includes("noon") && (
+                      <TakePillButton
+                        medicationId={med.id}
                         time_slot="noon"
-                        initialTaken={todayLogs?.some((log: any) => 
-                          log.medication_id === med.id && log.time_slot === 'noon'
+                        initialTaken={todayLogs?.some(
+                          (log: any) => log.medication_id === med.id && log.time_slot === "noon"
                         )}
                       />
                     )}
-                    {med.times?.includes('evening') && (
-                      <TakePillButton 
-                        medicationId={med.id} 
+                    {med.times?.includes("evening") && (
+                      <TakePillButton
+                        medicationId={med.id}
                         time_slot="evening"
-                        initialTaken={todayLogs?.some((log: any) => 
-                          log.medication_id === med.id && log.time_slot === 'evening'
+                        initialTaken={todayLogs?.some(
+                          (log: any) => log.medication_id === med.id && log.time_slot === "evening"
                         )}
                       />
                     )}
