@@ -7,7 +7,7 @@ export default function EmotionComposer() {
   const [posting, setPosting] = useState(false);
   const [shared, setShared] = useState(false);
 
-  const emojis = ["😊", "😌", "😴", "😂", "🥰", "😎", "🤔", "😔", "😤", "🥺"];
+  const emojis = ["😊", "😌", "😴", "😂", "🥰", "😎", "🤔", "😔", "😤", "🥺", "☹️", "🥳"];
 
   async function handleShare() {
     if (!emoji.trim()) return;
@@ -51,18 +51,20 @@ export default function EmotionComposer() {
   return (
     <div className="card flex flex-col gap-3">
       <div className="text-sm font-medium">오늘 기분은 어떤가요?</div>
-      <div className="flex items-center gap-2 flex-wrap">
-        {emojis.map((e) => (
-          <button
-            key={e}
-            className={`btn h-12 w-12 text-xl rounded-full flex justify-center items-center ${
-              emoji === e ? "bg-token-signal-green text-white" : "bg-neutral-100"
-            }`}
-            onClick={() => setEmoji(e)}
-          >
-            {e}
-          </button>
-        ))}
+      <div className="flex w-full flex-col gap-2">
+        <div className="items-center  gap-2  content-center  grid grid-cols-6 grid-rows-2">
+          {emojis.map((e) => (
+            <button
+              key={e}
+              className={`btn h-full w-full text-xl rounded-full flex justify-center items-center ${
+                emoji === e ? "bg-token-signal-green text-white" : "bg-neutral-100"
+              }`}
+              onClick={() => setEmoji(e)}
+            >
+              {e}
+            </button>
+          ))}
+        </div>
         <div className="bg-green-300 w-full px-4 gap-2 h-12 rounded-2xl flex justify-center items-center  text-3xl">
           <span className="text-lg">내 기분은 :</span> {emoji}
         </div>
