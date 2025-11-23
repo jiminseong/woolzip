@@ -4,6 +4,7 @@ import EmotionComposer from "@/components/EmotionComposer";
 import TakePillButton from "@/components/TakePillButton";
 import SignOutButton from "@/components/SignOutButton";
 import InviteCodeManager from "@/components/InviteCodeManager";
+import PushPermissionToggle from "@/components/PushPermissionToggle";
 import { getSession, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function MePage() {
@@ -37,31 +38,8 @@ export default async function MePage() {
 
         <div className="card">
           <div className="text-lg font-semibold mb-2">설정</div>
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center justify-between">
-              <span>신호 공유</span>
-              <input type="checkbox" defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <span>약 복용 공유</span>
-              <input type="checkbox" defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <span>감정 공유</span>
-              <input type="checkbox" defaultChecked />
-            </div>
-            <div className="flex items-center justify-between">
-              <span>큰 글자 모드</span>
-              <input type="checkbox" />
-            </div>
-            <div className="flex items-center justify-between">
-              <span>고대비</span>
-              <input type="checkbox" />
-            </div>
-            <div className="flex items-center justify-between">
-              <span>푸시 허용</span>
-              <input type="checkbox" />
-            </div>
+          <div className="space-y-3 text-sm">
+            <PushPermissionToggle />
           </div>
           <div className="pt-4">
             <SignOutButton />

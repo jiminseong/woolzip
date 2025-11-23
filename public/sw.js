@@ -64,3 +64,47 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('sync', (event) => {
   // Implement POST 재시도 로직 here when offline queue is ready.
 });
+
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+  let payload = {};
+  try {
+    payload = event.data.json();
+  } catch {
+    try {
+      payload = JSON.parse(event.data.text());
+    } catch {
+      payload = { title: '울집', body: '새 알림이 도착했어요.' };
+    }
+  }
+
+  const title = payload.title || '울집';
+  const body = payload.body || '새 알림이 도착했어요.';
+  const url = payload.url || '/';
+  const icon = payload.icon || '/icons/icon-192.png';
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: '/icons/icon-192.png',
+      data: { url },
+    })
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || '/';
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      const client = clients.find((c) => c.url.includes(self.location.origin));
+      if (client) {
+        client.focus();
+        if (targetUrl) client.navigate(targetUrl);
+        return;
+      }
+      self.clients.openWindow(targetUrl);
+    })
+  );
+});
