@@ -39,7 +39,7 @@ export default function EmotionComposer() {
   if (shared) {
     return (
       <div className="card text-center space-y-3">
-        <div className="text-4xl">{emoji}</div>
+        <div className="  text-4xl">{emoji}</div>
         <div>
           <div className="font-medium text-token-signal-green">감정이 공유되었습니다!</div>
           <div className="text-sm text-token-text-secondary">오늘은 이미 감정을 공유했어요</div>
@@ -55,7 +55,7 @@ export default function EmotionComposer() {
         {emojis.map((e) => (
           <button
             key={e}
-            className={`btn h-12 w-12 text-xl ${
+            className={`btn h-12 w-12 text-xl rounded-full flex justify-center items-center ${
               emoji === e ? "bg-token-signal-green text-white" : "bg-neutral-100"
             }`}
             onClick={() => setEmoji(e)}
@@ -63,7 +63,9 @@ export default function EmotionComposer() {
             {e}
           </button>
         ))}
-        <div className="ml-auto text-3xl">{emoji}</div>
+        <div className="bg-green-300 w-full px-4 gap-2 h-12 rounded-2xl flex justify-center items-center  text-3xl">
+          <span className="text-lg">내 기분은 :</span> {emoji}
+        </div>
       </div>
       <input
         value={text}
