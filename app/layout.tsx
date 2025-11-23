@@ -1,10 +1,26 @@
-import type { Metadata } from 'next'
-import './globals.css'
+import type { Metadata } from "next";
+import "./globals.css";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 
 export const metadata: Metadata = {
-  title: '울집 Woolzip',
-  description: '하루 10초, 우리 가족 안심'
-}
+  title: "울집 Woolzip",
+  description: "하루 10초, 우리 가족 안심",
+  applicationName: "울집 Woolzip",
+  manifest: "/manifest.webmanifest",
+  themeColor: "#10b981",
+  icons: {
+    icon: [
+      { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/icons/icon-192.png",
+  },
+  appleWebApp: {
+    capable: true,
+    title: "울집",
+    statusBarStyle: "default",
+  },
+};
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -13,8 +29,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="mx-auto max-w-md min-h-dvh flex flex-col">
           {children}
         </div>
+        <PWAInstallPrompt />
       </body>
     </html>
   )
 }
-
