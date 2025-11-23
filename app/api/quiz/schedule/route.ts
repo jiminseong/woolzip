@@ -74,7 +74,11 @@ export async function POST(req: NextRequest) {
       .update({ time_of_day, timezone, enabled })
       .eq("id", existing.id);
     if (updateError) {
-      return NextResponse.json({ ok: false, error: { code: "db_error" } }, { status: 500 });
+      console.error("quiz schedule update error", updateError);
+      return NextResponse.json(
+        { ok: false, error: { code: "db_error", message: updateError.message } },
+        { status: 500 }
+      );
     }
   } else {
     const { error: insertError } = await (supabase.from("question_schedule") as any).insert({
@@ -84,7 +88,11 @@ export async function POST(req: NextRequest) {
       enabled,
     });
     if (insertError) {
-      return NextResponse.json({ ok: false, error: { code: "db_error" } }, { status: 500 });
+      console.error("quiz schedule insert error", insertError);
+      return NextResponse.json(
+        { ok: false, error: { code: "db_error", message: insertError.message } },
+        { status: 500 }
+      );
     }
   }
 
