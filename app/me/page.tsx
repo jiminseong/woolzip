@@ -5,6 +5,7 @@ import TakePillButton from "@/components/TakePillButton";
 import SignOutButton from "@/components/SignOutButton";
 import InviteCodeManager from "@/components/InviteCodeManager";
 import PushPermissionToggle from "@/components/PushPermissionToggle";
+import MedicationManager from "@/components/MedicationManager";
 import { getSession, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function MePage() {
@@ -48,8 +49,10 @@ export default async function MePage() {
 
         <div className="card">
           <div className="text-lg font-semibold mb-2">약 관리</div>
-          {medications && medications.length > 0 ? (
-            <div className="space-y-3">
+          <MedicationManager initial={medications || []} />
+          {medications && medications.length > 0 && (
+            <div className="mt-4 space-y-3">
+              <div className="text-sm font-medium">오늘 복용 체크</div>
               {medications.map((med: any) => (
                 <div key={med.id} className="space-y-2">
                   <div className="font-medium">{med.name}</div>
@@ -84,11 +87,6 @@ export default async function MePage() {
                   </div>
                 </div>
               ))}
-            </div>
-          ) : (
-            <div className="text-center py-4 text-token-text-secondary">
-              <p>등록된 약이 없습니다</p>
-              <p className="text-sm">약 관리 기능은 추후 업데이트 예정입니다</p>
             </div>
           )}
         </div>
