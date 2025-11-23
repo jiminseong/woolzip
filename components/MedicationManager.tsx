@@ -111,10 +111,10 @@ export default function MedicationManager({ initial }: { initial: Medication[] }
                   : "border-neutral-200 bg-white hover:border-token-signal-green"
               }`}
             >
-              {opt.label}
-            </button>
-          ))}
-        </div>
+            {opt.label}
+          </button>
+        ))}
+      </div>
 
         {error && <div className="text-sm text-token-signal-red">{error}</div>}
 

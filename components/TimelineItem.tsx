@@ -28,12 +28,14 @@ export default function TimelineItem({
           : "bg-neutral-300";
   return (
     <div className="flex items-center gap-3 py-2">
-      <div className={`w-3 h-3 rounded-full ${dot}`} />
+      <div className={`w-2.5 h-2.5 rounded-full ${dot}`} />
       <div className="flex-1">
-        <div className="font-medium">{title}</div>
-        <div className="text-sm text-token-text-secondary">{time}</div>
+        <div className="font-medium leading-tight">{title}</div>
+        <div className="text-sm text-token-text-secondary leading-tight mt-1">{time}</div>
       </div>
-      <div className="text-xs text-token-text-secondary">{kindLabel[kind]}</div>
+      <div className="text-[11px] text-token-text-secondary bg-neutral-100 rounded-full px-2 py-1">
+        {kindLabel[kind]}
+      </div>
     </div>
   );
 }
