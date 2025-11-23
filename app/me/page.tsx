@@ -6,6 +6,7 @@ import SignOutButton from "@/components/SignOutButton";
 import InviteCodeManager from "@/components/InviteCodeManager";
 import PushPermissionToggle from "@/components/PushPermissionToggle";
 import MedicationManager from "@/components/MedicationManager";
+import LargeFontToggle from "@/components/LargeFontToggle";
 import { getSession, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function MePage() {
@@ -40,6 +41,7 @@ export default async function MePage() {
         <div className="card">
           <div className="text-lg font-semibold mb-2">설정</div>
           <div className="space-y-3 text-sm">
+            <LargeFontToggle />
             <PushPermissionToggle />
           </div>
           <div className="pt-4">
