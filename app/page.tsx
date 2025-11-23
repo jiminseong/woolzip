@@ -131,7 +131,7 @@ async function getFamilyData(userId: string) {
     ...(emotions || []).map((e: any) => ({
       id: e.id,
       kind: "emotion" as const,
-      title: `${e.users?.display_name || "누군가"} · ${e.emoji} ${e.text}`,
+      title: `${e.users?.display_name || "누군가"} · ${e.emoji}${e.text ? ` ${e.text}` : ""}`,
       time: new Date(e.created_at).toLocaleTimeString("ko-KR", {
         hour: "2-digit",
         minute: "2-digit",

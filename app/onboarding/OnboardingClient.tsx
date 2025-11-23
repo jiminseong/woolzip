@@ -6,27 +6,39 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Step = "profile" | "family" | "complete";
 
-export default function OnboardingClient() {
+type OnboardingProps = {
+  initialDisplayName?: string;
+  initialRole?: "parent" | "child" | "sibling";
+  hasProfile: boolean;
+  hasSettings: boolean;
+};
+
+export default function OnboardingClient({
+  initialDisplayName = "",
+  initialRole = "parent",
+  hasProfile,
+  hasSettings,
+}: OnboardingProps) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("profile");
+  const [step, setStep] = useState<Step>(hasProfile ? "family" : "profile");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // 프로필 정보
-  const [displayName, setDisplayName] = useState("");
-  const [role, setRole] = useState<"parent" | "child" | "sibling">("parent");
+  const [displayName, setDisplayName] = useState(initialDisplayName);
+  const [role, setRole] = useState<"parent" | "child" | "sibling">(initialRole);
+  const [profileCompleted, setProfileCompleted] = useState(hasProfile && hasSettings);
 
   // 가족 정보
   const [familyChoice, setFamilyChoice] = useState<"create" | "join">("create");
   const [familyName, setFamilyName] = useState("");
   const [inviteCode, setInviteCode] = useState("");
 
-  async function handleProfileSubmit() {
-    if (!displayName.trim()) return;
-
-    setLoading(true);
+  async function persistProfile({ withLoading }: { withLoading?: boolean } = {}) {
+    if (withLoading) {
+      setLoading(true);
+    }
     setError(null);
-
     try {
       const supabase = getSupabaseBrowserClient();
       const {
@@ -34,6 +46,8 @@ export default function OnboardingClient() {
       } = await supabase.auth.getUser();
 
       if (!user) throw new Error("사용자 정보를 찾을 수 없습니다");
+
+      if (!displayName.trim()) throw new Error("이름을 입력하세요");
 
       // 사용자 프로필 업데이트 (username은 이미 생성됨)
       const { error: updateError } = await (supabase.from("users") as any)
@@ -58,11 +72,22 @@ export default function OnboardingClient() {
 
       if (settingsError) throw settingsError;
 
-      setStep("family");
+      setProfileCompleted(true);
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "프로필 저장 중 오류가 발생했습니다");
+      return false;
     } finally {
-      setLoading(false);
+      if (withLoading) {
+        setLoading(false);
+      }
+    }
+  }
+
+  async function handleProfileSubmit() {
+    const saved = await persistProfile({ withLoading: true });
+    if (saved) {
+      setStep("family");
     }
   }
 
@@ -72,6 +97,13 @@ export default function OnboardingClient() {
 
     try {
       const supabase = getSupabaseBrowserClient();
+      if (!profileCompleted) {
+        const saved = await persistProfile();
+        if (!saved) {
+          setLoading(false);
+          return;
+        }
+      }
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -81,6 +113,7 @@ export default function OnboardingClient() {
       if (familyChoice === "create") {
         if (!familyName.trim()) {
           setError("가족 이름을 입력하세요");
+          setLoading(false);
           return;
         }
 
@@ -108,6 +141,7 @@ export default function OnboardingClient() {
         // 초대 코드로 가족 합류
         if (!inviteCode.trim()) {
           setError("초대 코드를 입력하세요");
+          setLoading(false);
           return;
         }
 
@@ -227,8 +261,21 @@ export default function OnboardingClient() {
     return (
       <div className="min-h-dvh flex flex-col">
         <header className="section">
-          <h1 className="text-2xl font-bold">가족 설정 👨‍👩‍👧‍👦</h1>
-          <p className="text-token-text-secondary">새로운 가족을 만들거나 기존 가족에 합류하세요</p>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-2xl font-bold">가족 설정 👨‍👩‍👧‍👦</h1>
+              <p className="text-token-text-secondary">새로운 가족을 만들거나 기존 가족에 합류하세요</p>
+            </div>
+            {hasProfile && (
+              <button
+                type="button"
+                onClick={() => setStep("profile")}
+                className="text-sm text-token-signal-green underline"
+              >
+                이름/역할 수정
+              </button>
+            )}
+          </div>
         </header>
 
         <main className="flex-1 px-4 pb-16 space-y-6">

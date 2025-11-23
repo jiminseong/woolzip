@@ -19,7 +19,7 @@ create table public.users (
 create table public.families (
   id uuid primary key default gen_random_uuid(),
   name text,
-  created_by uuid references public.users(id) on delete set null,
+  created_by uuid references public.users(id) on delete set null default auth.uid(),
   created_at timestamptz default now()
 );
 
@@ -137,6 +137,32 @@ create index on public.family_members (family_id, user_id);
 create index on public.emotions (family_id, created_at desc);
 create index on public.medications (user_id, is_active);
 create index on public.invites (code, expires_at);
+
+-- Ensure created_by matches the authenticated user on insert
+create or replace function public.set_family_created_by()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+  if auth.uid() is null then
+    raise exception 'auth.uid() is null; authentication required' using errcode = '42501';
+  end if;
+  if new.created_by is null then
+    new.created_by := auth.uid();
+  end if;
+  if new.created_by <> auth.uid() then
+    raise exception 'created_by must match auth.uid()' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+create trigger set_family_created_by
+  before insert on public.families
+  for each row
+  execute function public.set_family_created_by();
 
 -- Function to update updated_at timestamp
 create or replace function public.handle_updated_at()

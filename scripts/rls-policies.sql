@@ -28,14 +28,12 @@ create policy "Users can insert own profile" on public.users
 -- Families policies: 가족 구성원만 접근
 create policy "Family members can view family" on public.families
   for select using (
-    exists (
-      select 1 from public.family_members fm
-      where fm.family_id = id and fm.user_id = auth.uid() and fm.is_active = true
-    )
+    public.is_active_family_member(id)
+    or created_by = auth.uid()
   );
 
 create policy "Users can create families" on public.families
-  for insert with check (auth.uid() = created_by);
+  for insert with check (auth.uid() is not null);
 
 -- Family members policies: 같은 가족 구성원만 볼 수 있음
 create policy "Family members can view members" on public.family_members
