@@ -19,16 +19,23 @@ type TypedSupabaseClient = SupabaseClient<Database>;
 export async function createSupabaseServerClient(): Promise<TypedSupabaseClient> {
   const cookieStore = await cookies();
   const { supabaseKey, supabaseUrl } = getSupabaseEnv();
+  const safeSet = (name: string, value: string, options?: Parameters<typeof cookieStore.set>[0]) => {
+    try {
+      cookieStore.set({ name, value, ...options });
+    } catch {
+      // In Server Components, Next.js disallows mutating cookies. Ignore set failures here.
+    }
+  };
   return createServerClient<Database>(supabaseUrl, supabaseKey, {
     cookies: {
       get(name) {
         return cookieStore.get(name)?.value;
       },
       set(name, value, options) {
-        cookieStore.set({ name, value, ...options });
+        safeSet(name, value, options);
       },
       remove(name, options) {
-        cookieStore.set({ name, value: "", ...options, maxAge: 0 });
+        safeSet(name, "", { ...options, maxAge: 0 });
       },
     },
   });
