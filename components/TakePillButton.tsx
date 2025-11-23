@@ -46,9 +46,11 @@ export default function TakePillButton({
   return (
     <button
       onClick={handleTake}
-      className={`btn ${
-        taken ? "btn-green" : "bg-neutral-100 hover:bg-neutral-200"
-      } w-full disabled:opacity-50`}
+      className={`h-12 w-full rounded-lg px-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-300 transition ${
+        taken
+          ? "bg-token-signal-green text-white"
+          : "bg-neutral-100 hover:bg-neutral-200 text-token-text-primary"
+      } disabled:opacity-60`}
       disabled={taken || taking}
     >
       {taking ? "기록 중..." : taken ? "✓ 복용완료" : `${timeSlotTexts[time_slot]} 복용`}

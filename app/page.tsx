@@ -176,7 +176,10 @@ async function getFamilyData(userId: string) {
     );
 
     const joinedAt = member.joined_at
-      ? new Date(member.joined_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+      ? new Date(member.joined_at).toLocaleTimeString("ko-KR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        })
       : null;
 
     return {

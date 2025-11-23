@@ -82,10 +82,8 @@ export default function MedicationManager({ initial }: { initial: Medication[] }
   };
 
   return (
-    <div className="card space-y-3">
-      <div className="text-lg font-semibold">약 관리</div>
-
-      <div className="space-y-2">
+    <div className="space-y-4">
+      <div className="space-y-3">
         <label className="block text-sm">
           <span className="text-token-text-secondary">약 이름</span>
           <input
@@ -93,7 +91,7 @@ export default function MedicationManager({ initial }: { initial: Medication[] }
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="예: 혈압약, 고지혈증약"
-            className="mt-1 w-full rounded-xl border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
+            className="mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
             maxLength={30}
           />
         </label>
@@ -105,16 +103,16 @@ export default function MedicationManager({ initial }: { initial: Medication[] }
               key={opt.value}
               type="button"
               onClick={() => toggleTime(opt.value)}
-              className={`rounded-xl border px-3 py-2 text-sm transition-colors ${
+              className={`h-11 rounded-lg border text-sm transition-colors ${
                 times.includes(opt.value)
                   ? "border-token-signal-green bg-green-50 text-token-signal-green"
                   : "border-neutral-200 bg-white hover:border-token-signal-green"
               }`}
             >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+              {opt.label}
+            </button>
+          ))}
+        </div>
 
         {error && <div className="text-sm text-token-signal-red">{error}</div>}
 
@@ -128,14 +126,17 @@ export default function MedicationManager({ initial }: { initial: Medication[] }
         </button>
       </div>
 
-      <div className="pt-2 space-y-3">
+      <div className="space-y-2">
         <div className="text-sm text-token-text-secondary">내 약 목록</div>
         {items.length === 0 ? (
           <div className="text-sm text-token-text-secondary">등록된 약이 없습니다.</div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {items.map((med) => (
-              <div key={med.id} className="flex items-center justify-between rounded-xl bg-neutral-50 px-3 py-2">
+              <div
+                key={med.id}
+                className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2"
+              >
                 <div>
                   <div className="font-medium">{med.name}</div>
                   <div className="text-xs text-token-text-secondary">{timeBadges(med.times)}</div>
