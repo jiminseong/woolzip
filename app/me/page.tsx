@@ -7,6 +7,7 @@ import InviteCodeManager from "@/components/InviteCodeManager";
 import PushPermissionToggle from "@/components/PushPermissionToggle";
 import MedicationManager from "@/components/MedicationManager";
 import LargeFontToggle from "@/components/LargeFontToggle";
+import QuizScheduleForm from "@/components/QuizScheduleForm";
 import { getSession, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function MePage() {
@@ -30,6 +31,20 @@ export default async function MePage() {
     .eq("user_id", session.user.id)
     .gte("taken_at", today.toISOString());
 
+  const { data: familyMember } = await (supabase.from("family_members") as any)
+    .select("family_id")
+    .eq("user_id", session.user.id)
+    .eq("is_active", true)
+    .single();
+
+  const { data: quizSchedule } = familyMember
+    ? await (supabase.from("question_schedule") as any)
+        .select("time_of_day, timezone, enabled")
+        .eq("family_id", familyMember.family_id)
+        .eq("enabled", true)
+        .maybeSingle()
+    : { data: null };
+
   return (
     <div className="flex flex-col min-h-dvh">
       <header className="section">
@@ -48,6 +63,11 @@ export default async function MePage() {
             <SignOutButton />
           </div>
         </div>
+
+        <QuizScheduleForm
+          initialTime={quizSchedule?.time_of_day || null}
+          initialTimezone={quizSchedule?.timezone || "Asia/Seoul"}
+        />
 
         <div className="card">
           <div className="text-lg font-semibold mb-2">약 관리</div>

@@ -1,6 +1,6 @@
 # 울집(Woolzip)
 
-가족이 흩어져 있어도 10초 안에 안심 신호·약 복용·감정을 공유하는 PWA입니다. 자동 위치 수집 없이, 사용자가 선택한 최소 정보만 공유합니다.
+가족이 흩어져 있어도 10초 안에 안심 신호·약 복용·감정·질문 답변을 공유하는 PWA입니다. 자동 위치 수집 없이, 사용자가 선택한 최소 정보만 공유합니다.
 
 ## 주요 기능
 - 안심 신호: 초록/노랑/빨강 + 출발·귀가·식사·취침·기상 원터치 입력(5분 내 되돌리기).
@@ -8,6 +8,7 @@
 - 타임라인/오늘 요약: 가족별 신호·약·감정·참여 이벤트를 한 화면에서 확인.
 - 감정 공유: 하루 1회 이모지+한 줄.
 - 푸시/오프라인: PWA + 웹 푸시(설치/권한 플로우), 기본 캐싱 및 오프라인 대응.
+- 가족 퀴즈: 매일 질문 알림, 응답은 모두 제출 전까지 비공개, 미응답자에게 답변 요청 가능.
 
 ## 기술 스택
 - Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS
@@ -58,11 +59,19 @@ npm run dev
 - `public/manifest.webmanifest`, `public/sw.js`로 기본 앱 셸/아이콘 캐시.
 - 설치 유도: `components/PWAInstallPrompt`에서 Android/데스크톱 A2HS, iOS 홈화면 추가 배너.
 - 푸시 등록: `components/PushPermissionToggle` → `/api/devices/register`로 구독 저장.
+- 퀴즈 알림: `/api/quiz/schedule`로 가족별 알림 시각 설정, Scheduler/Edge Function에서 인스턴스 생성·푸시 발송 후 `/api/quiz/today`로 상태 조회.
 
 ## 약 복용 플로우
 - 약 등록: 이름 + 시간대(아침/점심/저녁) 저장.
 - 복용 기록: `TakePillButton` → `/api/med/take` → `med_logs` 적재, 오늘 중복 방지.
 - 요약/타임라인: 복용 이벤트와 미복용 상태 표시.
+
+## 가족 퀴즈 플로우
+- 스케줄: `question_schedule`에 가족별 알림 시각 저장(타임존 포함).
+- 인스턴스: Scheduler/Edge Function이 매일 `question_instances` 생성 후 푸시 발송.
+- 응답/공개: `/api/quiz/today`로 질문·응답 상태 조회, `/api/quiz/respond`로 답변 제출, 모두 답변하거나 마감되면 공개.
+- 답변 요청: `/api/quiz/nudge`로 미응답자에게 알림 요청.
+- 히스토리: `/api/quiz/history`로 마감된 질문과 공개된 답변을 확인.
 
 ## 배포
 - Vercel 기준: 환경 변수 등록, `npm run build` → `npm run start`.

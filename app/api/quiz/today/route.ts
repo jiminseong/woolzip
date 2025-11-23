@@ -30,6 +30,12 @@ export async function GET() {
       expires_at,
       questions:question_id (
         prompt
+      ),
+      question_responses (
+        user_id,
+        answer_text,
+        created_at,
+        users:user_id (display_name)
       )
     `
     )
@@ -42,10 +48,17 @@ export async function GET() {
     return NextResponse.json({ ok: true, data: null });
   }
 
-  const { data: responses } = await (supabase.from("question_responses") as any)
-    .select("user_id")
-    .eq("question_instance_id", instance.id);
+  const { data: members } = await (supabase.from("family_members") as any)
+    .select(
+      `
+      user_id,
+      users:user_id (display_name)
+    `
+    )
+    .eq("family_id", member.family_id)
+    .eq("is_active", true);
 
+  const responses = instance.question_responses || [];
   return NextResponse.json({
     ok: true,
     data: {
@@ -53,8 +66,21 @@ export async function GET() {
       prompt: instance.questions?.prompt,
       status: instance.status,
       expires_at: instance.expires_at,
-      my_answered: responses?.some((r: any) => r.user_id === session.user.id) ?? false,
-      answered_count: responses?.length ?? 0,
+      my_answered: responses.some((r: any) => r.user_id === session.user.id),
+      answered_count: responses.length,
+      members: (members || []).map((m: any) => ({
+        user_id: m.user_id,
+        display_name: m.users?.display_name || "가족",
+        answered: responses.some((r: any) => r.user_id === m.user_id),
+      })),
+      answers:
+        instance.status === "closed"
+          ? responses.map((r: any) => ({
+              user_id: r.user_id,
+              display_name: r.users?.display_name || "가족",
+              answer_text: r.answer_text,
+            }))
+          : [],
     },
   });
 }
