@@ -35,6 +35,7 @@ async function getFamilyData(userId: string) {
       `
       user_id,
       role,
+      joined_at,
       users:user_id (
         display_name
       )
@@ -138,6 +139,18 @@ async function getFamilyData(userId: string) {
       }),
       timestamp: new Date(e.created_at),
     })),
+    ...(members || [])
+      .filter((m: any) => m.joined_at && new Date(m.joined_at) >= todayStart)
+      .map((m: any) => ({
+        id: `join-${m.user_id}`,
+        kind: "join" as const,
+        title: `${m.users?.display_name || "새 가족"} · 가족에 참여했어요`,
+        time: new Date(m.joined_at).toLocaleTimeString("ko-KR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        timestamp: new Date(m.joined_at),
+      })),
   ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
   // 구성원별 오늘 요약 생성
@@ -162,12 +175,17 @@ async function getFamilyData(userId: string) {
       (m: any) => m.users?.display_name === member.users?.display_name
     );
 
+    const joinedAt = member.joined_at
+      ? new Date(member.joined_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+      : null;
+
     return {
       id: member.user_id,
       name: member.users?.display_name || "알 수 없음",
       last: lastActivity,
       gyrc,
       med: hasMedToday,
+      joinedAt,
     };
   });
 

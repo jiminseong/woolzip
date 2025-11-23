@@ -1,9 +1,10 @@
-type Kind = "signal" | "med" | "emotion";
+type Kind = "signal" | "med" | "emotion" | "join";
 
 const kindLabel: Record<Kind, string> = {
   signal: "신호",
   med: "복용",
   emotion: "감정",
+  join: "참여",
 };
 
 export default function TimelineItem({
