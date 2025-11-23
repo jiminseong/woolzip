@@ -46,6 +46,16 @@ export default function LoginForm() {
         });
 
         if (signUpError) {
+          const signUpCode = (signUpError as { code?: string }).code;
+          const isDuplicateEmail =
+            signUpCode === "user_already_exists" ||
+            signUpError.message.toLowerCase().includes("user already registered");
+
+          if (isDuplicateEmail) {
+            setError("이미 등록된 계정이에요. 로그인으로 이동해주세요.");
+            return;
+          }
+
           setError(signUpError.message);
           return;
         }
@@ -101,7 +111,7 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="card space-y-6">
+    <div className="card w-full space-y-6">
       <div>
         <div className="text-lg font-semibold">
           {isSignUp ? "울집에 오신 걸 환영해요" : "다시 만나서 반가워요"}
