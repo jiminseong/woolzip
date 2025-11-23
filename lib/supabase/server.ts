@@ -19,7 +19,11 @@ type TypedSupabaseClient = SupabaseClient<Database>;
 export async function createSupabaseServerClient(): Promise<TypedSupabaseClient> {
   const cookieStore = await cookies();
   const { supabaseKey, supabaseUrl } = getSupabaseEnv();
-  const safeSet = (name: string, value: string, options?: Parameters<typeof cookieStore.set>[0]) => {
+  const safeSet = (
+    name: string,
+    value: string,
+    options?: Parameters<typeof cookieStore.set>[0]
+  ) => {
     try {
       cookieStore.set({ name, value, ...options });
     } catch {

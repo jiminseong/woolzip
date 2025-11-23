@@ -38,7 +38,7 @@ export default function LoginForm() {
           return;
         }
 
-        // 2. 임시 이메일로 Supabase Auth 가입
+        // 2. 임시 이메일로 Supabase Auth 가입 (자동 로그인 실패 시 재로그인 시도)
         const tempEmail = `${username}@woolzip.temp`;
         const { data: authData, error: signUpError } = await supabase.auth.signUp({
           email: tempEmail,
@@ -60,12 +60,20 @@ export default function LoginForm() {
           return;
         }
 
-        if (authData.user) {
-          // 3. users 테이블에 프로필 생성
-          const { error: profileError } = await (supabase.from("users") as any).insert({
-            id: authData.user.id,
+        // 세션이 없으면 자동 로그인 시도 (이메일 미인증 설정일 때 방어)
+        const session =
+          authData.session ??
+          (await supabase.auth.signInWithPassword({ email: tempEmail, password })).data.session ??
+          null;
+
+        if (authData.user || session?.user) {
+          const userId = authData.user?.id ?? session?.user.id;
+          const email = authData.user?.email ?? session?.user.email ?? tempEmail;
+          // 3. users 테이블에 프로필 생성/업서트
+          const { error: profileError } = await (supabase.from("users") as any).upsert({
+            id: userId,
             username,
-            email: tempEmail,
+            email,
           });
 
           if (profileError) {
@@ -84,20 +92,30 @@ export default function LoginForm() {
           .eq("username", username)
           .single()) as { data: { email: string } | null; error: any };
 
-        if (!userData?.email) {
-          setError("존재하지 않는 ID입니다.");
-          return;
-        }
+        const fallbackEmail = `${username}@woolzip.temp`;
+        const emailToUse = userData?.email ?? fallbackEmail;
 
         // Supabase Auth로 로그인
         const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: userData.email,
+          email: emailToUse,
           password,
         });
 
         if (signInError) {
           setError("ID 또는 비밀번호가 틀렸습니다.");
           return;
+        }
+
+        // 로그인 후 프로필이 없었다면 보강
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          await (supabase.from("users") as any).upsert({
+            id: user.id,
+            username,
+            email: user.email ?? emailToUse,
+          });
         }
 
         // 메인 화면으로 이동
