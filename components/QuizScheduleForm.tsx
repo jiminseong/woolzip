@@ -4,13 +4,10 @@ import { useEffect, useState } from "react";
 
 export default function QuizScheduleForm({
   initialTime,
-  initialTimezone = "Asia/Seoul",
 }: {
   initialTime: string | null;
-  initialTimezone?: string | null;
 }) {
   const [time, setTime] = useState(initialTime ?? "20:00");
-  const [timezone, setTimezone] = useState(initialTimezone ?? "Asia/Seoul");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +24,7 @@ export default function QuizScheduleForm({
       const res = await fetch("/api/quiz/schedule", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ time_of_day: `${time}:00`, timezone, enabled: true }),
+        body: JSON.stringify({ time_of_day: `${time}:00`, enabled: true }),
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.ok) {
@@ -47,20 +44,11 @@ export default function QuizScheduleForm({
       <div className="text-lg font-semibold">질문 알림 시간</div>
       <div className="space-y-2 text-sm">
         <label className="block">
-          <span className="text-token-text-secondary">알림 시각</span>
+          <span className="text-token-text-secondary">알림 시각 (한국 시간 기준)</span>
           <input
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
-          />
-        </label>
-        <label className="block">
-          <span className="text-token-text-secondary">시간대</span>
-          <input
-            type="text"
-            value={timezone}
-            onChange={(e) => setTimezone(e.target.value)}
             className="mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
           />
         </label>

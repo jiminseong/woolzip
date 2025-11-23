@@ -21,7 +21,17 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .maybeSingle();
 
-  return NextResponse.json({ ok: true, data: schedule || null });
+  // UI에는 한국 시간 기준으로만 노출
+  const result = schedule
+    ? {
+        time_of_day: schedule.time_of_day,
+        timezone: "Asia/Seoul",
+        enabled: schedule.enabled,
+        created_at: schedule.created_at,
+      }
+    : null;
+
+  return NextResponse.json({ ok: true, data: result });
 }
 
 export async function POST(req: NextRequest) {
@@ -39,7 +49,8 @@ export async function POST(req: NextRequest) {
   if (!time_of_day) {
     return NextResponse.json({ ok: false, error: { code: "bad_request", message: "시간이 필요합니다" } }, { status: 400 });
   }
-  const timezone = body.timezone || "Asia/Seoul";
+  // 한국 서비스 기준으로 저장은 Asia/Seoul로 고정
+  const timezone = "Asia/Seoul";
   const enabled = body.enabled ?? true;
 
   const supabase = await createSupabaseServerClient();
