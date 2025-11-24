@@ -5,108 +5,89 @@ import TimelineItem from "@/components/TimelineItem";
 import RealtimeProvider from "@/components/RealtimeProvider";
 import { getSession, createSupabaseServerClient } from "@/lib/supabase/server";
 
-async function getFamilyData(userId: string) {
-  const supabase = await createSupabaseServerClient();
-
-  // 사용자의 가족 정보 조회
-  const { data: familyMember } = await (supabase.from("family_members") as any)
-    .select(
-      `
-      family_id,
-      families:family_id (
-        id,
-        name
-      )
-    `
-    )
-    .eq("user_id", userId)
-    .eq("is_active", true)
-    .single();
-
-  if (!familyMember) {
-    return { members: [], timeline: [], familyName: null, familyId: null };
-  }
-
-  const familyId = familyMember.family_id;
-
-  // 가족 구성원 목록
-  const { data: members } = await (supabase.from("family_members") as any)
-    .select(
-      `
-      user_id,
-      role,
-      joined_at,
-      users:user_id (
-        display_name
-      )
-    `
-    )
-    .eq("family_id", familyId)
-    .eq("is_active", true);
-
-  // 오늘 신호 데이터
+async function getFamilyData(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  familyId: string,
+  familyName: string | null
+) {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
-  const { data: signals } = await (supabase.from("signals") as any)
-    .select(
+  const [membersResult, signalsResult, medLogsResult, emotionsResult] = await Promise.all([
+    (supabase.from("family_members") as any)
+      .select(
+        `
+        user_id,
+        role,
+        joined_at,
+        users:user_id (
+          display_name
+        )
       `
-      id,
-      type,
-      tag,
-      note,
-      created_at,
-      users:user_id (
-        display_name
       )
-    `
-    )
-    .eq("family_id", familyId)
-    .gte("created_at", todayStart.toISOString())
-    .order("created_at", { ascending: false })
-    .limit(20);
+      .eq("family_id", familyId)
+      .eq("is_active", true),
+    (supabase.from("signals") as any)
+      .select(
+        `
+        id,
+        type,
+        tag,
+        note,
+        created_at,
+        users:user_id (
+          display_name
+        )
+      `
+      )
+      .eq("family_id", familyId)
+      .gte("created_at", todayStart.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(20),
+    (supabase.from("med_logs") as any)
+      .select(
+        `
+        id,
+        time_slot,
+        taken_at,
+        users:user_id (
+          display_name
+        ),
+        medications:medication_id (
+          name
+        )
+      `
+      )
+      .eq("family_id", familyId)
+      .gte("taken_at", todayStart.toISOString())
+      .order("taken_at", { ascending: false })
+      .limit(10),
+    (supabase.from("emotions") as any)
+      .select(
+        `
+        id,
+        emoji,
+        text,
+        created_at,
+        users:user_id (
+          display_name
+        )
+      `
+      )
+      .eq("family_id", familyId)
+      .gte("created_at", todayStart.toISOString())
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
 
-  // 오늘 약 복용 데이터
-  const { data: medLogs } = await (supabase.from("med_logs") as any)
-    .select(
-      `
-      id,
-      time_slot,
-      taken_at,
-      users:user_id (
-        display_name
-      ),
-      medications:medication_id (
-        name
-      )
-    `
-    )
-    .eq("family_id", familyId)
-    .gte("taken_at", todayStart.toISOString())
-    .order("taken_at", { ascending: false })
-    .limit(10);
-
-  // 오늘 감정 데이터
-  const { data: emotions } = await (supabase.from("emotions") as any)
-    .select(
-      `
-      id,
-      emoji,
-      text,
-      created_at,
-      users:user_id (
-        display_name
-      )
-    `
-    )
-    .eq("family_id", familyId)
-    .gte("created_at", todayStart.toISOString())
-    .order("created_at", { ascending: false })
-    .limit(10);
+  const members = membersResult?.data || [];
+  const signals = signalsResult?.data || [];
+  const medLogs = medLogsResult?.data || [];
+  const emotions = emotionsResult?.data || [];
 
   // 타임라인 통합
   const timeline = [
-    ...(signals || []).map((s: any) => ({
+    ...signals.map((s: any) => ({
       id: s.id,
       kind: "signal" as const,
       title: `${s.users?.display_name || "누군가"} · ${getSignalText(s.type, s.tag)}`,
@@ -117,7 +98,7 @@ async function getFamilyData(userId: string) {
       color: s.type as "green" | "yellow" | "red",
       timestamp: new Date(s.created_at),
     })),
-    ...(medLogs || []).map((m: any) => ({
+    ...medLogs.map((m: any) => ({
       id: m.id,
       kind: "med" as const,
       title: `${m.users?.display_name || "누군가"} · ${
@@ -129,7 +110,7 @@ async function getFamilyData(userId: string) {
       }),
       timestamp: new Date(m.taken_at),
     })),
-    ...(emotions || []).map((e: any) => ({
+    ...emotions.map((e: any) => ({
       id: e.id,
       kind: "emotion" as const,
       title: `${e.users?.display_name || "누군가"} · ${e.emoji}${e.text ? ` ${e.text}` : ""}`,
@@ -139,7 +120,7 @@ async function getFamilyData(userId: string) {
       }),
       timestamp: new Date(e.created_at),
     })),
-    ...(members || [])
+    ...members
       .filter((m: any) => m.joined_at && new Date(m.joined_at) >= todayStart)
       .map((m: any) => ({
         id: `join-${m.user_id}`,
@@ -154,10 +135,8 @@ async function getFamilyData(userId: string) {
   ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
   // 구성원별 오늘 요약 생성
-  const memberSummaries = (members || []).map((member: any) => {
-    const memberSignals = (signals || []).filter(
-      (s: any) => s.users?.display_name === member.users?.display_name
-    );
+  const memberSummaries = members.map((member: any) => {
+    const memberSignals = signals.filter((s: any) => s.users?.display_name === member.users?.display_name);
     const gyrc = {
       g: memberSignals.filter((s: any) => s.type === "green").length,
       y: memberSignals.filter((s: any) => s.type === "yellow").length,
@@ -195,8 +174,8 @@ async function getFamilyData(userId: string) {
   return {
     members: memberSummaries,
     timeline,
-    familyName: familyMember.families?.name || "가족",
-    familyId: familyId,
+    familyName: familyName || "가족",
+    familyId,
   };
 }
 
@@ -233,7 +212,16 @@ export default async function Page() {
   // 온보딩 체크 - 사용자가 가족에 속해있는지 확인
   const supabase = await createSupabaseServerClient();
   const { data: familyMember } = await (supabase.from("family_members") as any)
-    .select("id")
+    .select(
+      `
+      id,
+      family_id,
+      families:family_id (
+        id,
+        name
+      )
+    `
+    )
     .eq("user_id", session.user.id)
     .eq("is_active", true)
     .single();
@@ -242,7 +230,11 @@ export default async function Page() {
     redirect("/onboarding");
   }
 
-  const { members, timeline, familyName, familyId } = await getFamilyData(session.user.id);
+  const { members, timeline, familyName, familyId } = await getFamilyData(
+    supabase,
+    familyMember.family_id,
+    familyMember.families?.name || null
+  );
   return (
     <RealtimeProvider familyId={familyId}>
       <div className="flex flex-col min-h-dvh">

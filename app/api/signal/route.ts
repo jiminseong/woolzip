@@ -5,7 +5,6 @@ export async function POST(request: NextRequest) {
   try {
     const { type, tag, note } = await request.json();
 
-    // 입력 검증
     if (!type || !["green", "yellow", "red"].includes(type)) {
       return NextResponse.json(
         { ok: false, error: { code: "INVALID_TYPE", message: "유효하지 않은 신호 타입입니다" } },
@@ -29,53 +28,37 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createSupabaseServerClient();
 
-    // 사용자 인증 확인
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
+    const { data, error } = await (supabase.rpc("insert_signal", {
+      p_type: type,
+      p_tag: tag || null,
+      p_note: note || null,
+    }) as any);
+
+    if (error) {
+      const message = error.message || "";
+      if (message.includes("NO_FAMILY")) {
+        return NextResponse.json(
+          { ok: false, error: { code: "NO_FAMILY", message: "가족 그룹이 없습니다" } },
+          { status: 400 }
+        );
+      }
+      if (message.toLowerCase().includes("jwt") || error.code === "PGRST301") {
+        return NextResponse.json(
+          { ok: false, error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다" } },
+          { status: 401 }
+        );
+      }
+      console.error("Signal insertion error:", error);
       return NextResponse.json(
-        { ok: false, error: { code: "UNAUTHORIZED", message: "로그인이 필요합니다" } },
-        { status: 401 }
+        { ok: false, error: { code: "DB_ERROR", message: "신호 저장에 실패했습니다" } },
+        { status: 500 }
       );
     }
 
-    // 사용자의 가족 정보 조회
-    const { data: familyMember, error: memberError } = await (
-      supabase.from("family_members") as any
-    )
-      .select("family_id")
-      .eq("user_id", user.id)
-      .eq("is_active", true)
-      .single();
+    const signal = data?.[0];
 
-    if (memberError || !familyMember) {
-      return NextResponse.json(
-        { ok: false, error: { code: "NO_FAMILY", message: "가족 그룹이 없습니다" } },
-        { status: 400 }
-      );
-    }
-
-    // Undo 윈도우 설정 (5분)
-    const undoUntil = new Date();
-    undoUntil.setMinutes(undoUntil.getMinutes() + 5);
-
-    // 신호 기록
-    const { data: signal, error: insertError } = await (supabase.from("signals") as any)
-      .insert({
-        family_id: familyMember.family_id,
-        user_id: user.id,
-        type,
-        tag: tag || null,
-        note: note || null,
-        undo_until: undoUntil.toISOString(),
-      })
-      .select()
-      .single();
-
-    if (insertError) {
-      console.error("Signal insertion error:", insertError);
+    if (!signal) {
+      console.error("Signal insertion error: empty response");
       return NextResponse.json(
         { ok: false, error: { code: "DB_ERROR", message: "신호 저장에 실패했습니다" } },
         { status: 500 }

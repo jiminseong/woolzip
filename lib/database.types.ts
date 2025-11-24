@@ -232,7 +232,39 @@ export interface Database {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      insert_signal: {
+        Args: {
+          p_type: Database["public"]["Tables"]["signals"]["Row"]["type"];
+          p_tag?: Database["public"]["Tables"]["signals"]["Row"]["tag"] | null;
+          p_note?: string | null;
+        };
+        Returns: {
+          id: string;
+          created_at: string | null;
+          undo_until: string | null;
+        }[];
+      };
+      insert_emotion: {
+        Args: {
+          p_emoji: string;
+          p_text?: string | null;
+        };
+        Returns: {
+          id: string;
+          created_at: string | null;
+        }[];
+      };
+      insert_med_log: {
+        Args: {
+          p_medication_id: string;
+          p_time_slot: Database["public"]["Tables"]["med_logs"]["Row"]["time_slot"];
+        };
+        Returns: {
+          id: string;
+          taken_at: string | null;
+          medication_name: string;
+        }[];
+      };
     };
     Enums: {
       [_ in never]: never;
