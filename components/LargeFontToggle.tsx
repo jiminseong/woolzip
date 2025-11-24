@@ -2,18 +2,19 @@
 
 import { useEffect, useState } from "react";
 
-type FontScale = "md" | "lg" | "xl";
+type FontScale = "lg" | "xl";
 
 const STORAGE_KEY = "woolzip-font-scale";
 
 export default function LargeFontToggle() {
-  const [scale, setScale] = useState<FontScale>("md");
+  const [scale, setScale] = useState<FontScale>("lg");
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    const saved = (localStorage.getItem(STORAGE_KEY) as FontScale | null) ?? "md";
-    applyScale(saved);
-    setScale(saved);
+    const persisted = localStorage.getItem(STORAGE_KEY) as FontScale | null;
+    const safeValue: FontScale = persisted === "xl" ? "xl" : "lg";
+    applyScale(safeValue);
+    setScale(safeValue);
   }, []);
 
   const applyScale = (value: FontScale) => {
@@ -23,17 +24,12 @@ export default function LargeFontToggle() {
   };
 
   const handleToggle = () => {
-    const next = scale === "md" ? "lg" : scale === "lg" ? "xl" : "md";
+    const next: FontScale = scale === "lg" ? "xl" : "lg";
     applyScale(next);
     setScale(next);
   };
 
-  const label =
-    scale === "md"
-      ? "기본"
-      : scale === "lg"
-        ? "큰 글자"
-        : "아주 큰 글자";
+  const label = scale === "lg" ? "큰 글자" : "아주 큰 글자";
 
   return (
     <div className="flex items-center justify-between gap-3">

@@ -27,7 +27,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ko" data-font="md" data-contrast="false">
+    <html lang="ko" data-font="lg" data-contrast="false">
       <body className="bg-token-bg-subtle text-token-text-primary min-h-dvh">
         <div className="mx-auto max-w-md min-h-dvh flex flex-col">{children}</div>
         <PWAInstallPrompt />

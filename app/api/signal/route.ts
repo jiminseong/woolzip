@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/database.types";
+
+type InsertSignalArgs = Database["public"]["Functions"]["insert_signal"]["Args"];
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,11 +31,11 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createSupabaseServerClient();
 
-    const { data, error } = await (supabase.rpc("insert_signal", {
+    const { data, error } = await ((supabase as any).rpc("insert_signal", {
       p_type: type,
       p_tag: tag || null,
       p_note: note || null,
-    }) as any);
+    } as InsertSignalArgs));
 
     if (error) {
       const message = error.message || "";

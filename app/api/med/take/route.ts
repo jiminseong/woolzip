@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/lib/database.types";
+
+type InsertMedLogArgs = Database["public"]["Functions"]["insert_med_log"]["Args"];
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,10 +24,10 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createSupabaseServerClient();
 
-    const { data, error } = await (supabase.rpc("insert_med_log", {
+    const { data, error } = await ((supabase as any).rpc("insert_med_log", {
       p_medication_id: medicationId,
       p_time_slot: time_slot,
-    }) as any);
+    } as InsertMedLogArgs));
 
     if (error) {
       const message = error.message || "";
