@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { sendWebPush } from "@/lib/push";
+
+export const runtime = "nodejs";
 
 type ScheduleRow = {
   id: string;
@@ -61,11 +64,13 @@ function buildExpiresAt(forDate: string, timezone: string) {
   return `${forDate}T23:59:00Z`;
 }
 
+type CreatedInstance = { familyId: string; instanceId: string; prompt: string; forDate: string };
+
 async function ensureQuestionForFamily(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   familyId: string,
   forDate: string
-) {
+): Promise<{ questionId: string; prompt: string }> {
   const { data: existing, error: existingError } = await (supabase.from("questions") as any)
     .select("id, prompt, created_at")
     .eq("family_id", familyId)
@@ -90,10 +95,12 @@ async function ensureQuestionForFamily(
 
   const idx = questions.length > 0 ? dayIndex(forDate) % questions.length : 0;
   const picked = questions[idx];
-  return picked?.id as string;
+  return { questionId: picked?.id as string, prompt: picked?.prompt as string };
 }
 
-async function createInstances(supabase: ReturnType<typeof createSupabaseAdminClient>) {
+async function createInstances(
+  supabase: ReturnType<typeof createSupabaseAdminClient>
+): Promise<{ created: CreatedInstance[]; skipped: string[] }> {
   const now = new Date();
   const { data: schedules, error } = await (supabase.from("question_schedule") as any)
     .select("id, family_id, time_of_day, timezone, enabled")
@@ -101,7 +108,7 @@ async function createInstances(supabase: ReturnType<typeof createSupabaseAdminCl
 
   if (error) throw error;
 
-  const created: string[] = [];
+  const created: CreatedInstance[] = [];
   const skipped: string[] = [];
 
   for (const schedule of schedules as ScheduleRow[]) {
@@ -126,27 +133,35 @@ async function createInstances(supabase: ReturnType<typeof createSupabaseAdminCl
       continue;
     }
 
-    const questionId = await ensureQuestionForFamily(supabase, schedule.family_id, forDate);
-    if (!questionId) {
+    const question = await ensureQuestionForFamily(supabase, schedule.family_id, forDate);
+    if (!question.questionId) {
       skipped.push(`${schedule.family_id}:no_question`);
       continue;
     }
 
     const expires_at = buildExpiresAt(forDate, tz);
-    const { error: insertError } = await (supabase.from("question_instances") as any).insert({
-      family_id: schedule.family_id,
-      question_id: questionId,
-      for_date: forDate,
-      expires_at,
-      status: "open",
-    });
+    const { data: inserted, error: insertError } = await (supabase.from("question_instances") as any)
+      .insert({
+        family_id: schedule.family_id,
+        question_id: question.questionId,
+        for_date: forDate,
+        expires_at,
+        status: "open",
+      })
+      .select("id")
+      .single();
 
-    if (insertError) {
+    if (insertError || !inserted?.id) {
       skipped.push(`${schedule.family_id}:error`);
       continue;
     }
 
-    created.push(schedule.family_id);
+    created.push({
+      familyId: schedule.family_id,
+      instanceId: inserted.id,
+      prompt: question.prompt,
+      forDate,
+    });
   }
 
   return { created, skipped };
@@ -160,8 +175,7 @@ async function closeFinishedInstances(supabase: ReturnType<typeof createSupabase
       id,
       family_id,
       expires_at,
-      question_responses (user_id),
-      family_members:family_id (user_id, is_active)
+      question_responses (user_id)
     `
     )
     .eq("status", "open");
@@ -171,9 +185,11 @@ async function closeFinishedInstances(supabase: ReturnType<typeof createSupabase
   const closed: string[] = [];
 
   for (const inst of openInstances || []) {
-    const members = (inst.family_members || [])
-      .filter((m: any) => m.is_active)
-      .map((m: any) => m.user_id);
+    const { data: memberRows } = await (supabase.from("family_members") as any)
+      .select("user_id")
+      .eq("family_id", inst.family_id)
+      .eq("is_active", true);
+    const members = (memberRows || []).map((m: any) => m.user_id);
     const responders = new Set((inst.question_responses || []).map((r: any) => r.user_id));
     const allAnswered = members.length > 0 && members.every((id: string) => responders.has(id));
     const expired = inst.expires_at ? new Date(inst.expires_at) <= now : false;
@@ -192,6 +208,59 @@ async function closeFinishedInstances(supabase: ReturnType<typeof createSupabase
   return { closed };
 }
 
+async function sendQuizPushes(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  created: CreatedInstance[]
+) {
+  const results: { sent: number; errors: number } = { sent: 0, errors: 0 };
+
+  for (const item of created) {
+    const { data: members } = await (supabase.from("family_members") as any)
+      .select(
+        `
+        user_id,
+        users:user_id (display_name),
+        settings:user_id (push_opt_in)
+      `
+      )
+      .eq("family_id", item.familyId)
+      .eq("is_active", true);
+
+    const allowedUserIds = (members || [])
+      .filter((m: any) => m.settings?.push_opt_in)
+      .map((m: any) => m.user_id);
+
+    if (allowedUserIds.length === 0) continue;
+
+    const { data: devices } = await (supabase.from("devices") as any)
+      .select("push_token, user_id")
+      .in("user_id", allowedUserIds);
+
+    const seenTokens = new Set<string>();
+
+    for (const dev of devices || []) {
+      const token = dev.push_token as string | null;
+      if (!token || seenTokens.has(token)) continue;
+      seenTokens.add(token);
+
+      try {
+        await sendWebPush(token, {
+          title: "오늘의 질문이 도착했어요",
+          body: item.prompt || "가족 퀴즈를 확인해 보세요.",
+          url: "/quiz",
+          icon: "/icons/icon-192.png",
+        });
+        results.sent += 1;
+      } catch (err) {
+        console.error("quiz push error", err);
+        results.errors += 1;
+      }
+    }
+  }
+
+  return results;
+}
+
 export async function POST(req: NextRequest) {
   if (!CRON_SECRET)
     return NextResponse.json({ ok: false, error: { code: "misconfigured" } }, { status: 500 });
@@ -205,11 +274,13 @@ export async function POST(req: NextRequest) {
       createInstances(supabase),
       closeFinishedInstances(supabase),
     ]);
+    const pushResult = await sendQuizPushes(supabase, createResult.created);
     return NextResponse.json({
       ok: true,
-      created: createResult.created,
+      created: createResult.created.map((c) => c.familyId),
       skipped: createResult.skipped,
       closed: closeResult.closed,
+      push: pushResult,
     });
   } catch (e) {
     console.error("quiz cron error", e);

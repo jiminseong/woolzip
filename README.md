@@ -39,6 +39,7 @@ NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_VAPID_KEY=...        # Web Push 공개키
 VAPID_PRIVATE_KEY=...            # Web Push 비밀키
 QUIZ_CRON_SECRET=...             # 퀴즈 인스턴스 생성/마감용 cron 보호 키
+PUSH_CONTACT_EMAIL=push@woolzip.app  # (선택) VAPID contact 이메일
 ```
 
 3) 개발 서버  
