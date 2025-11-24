@@ -22,10 +22,10 @@ export async function createSupabaseServerClient(): Promise<TypedSupabaseClient>
   const safeSet = (
     name: string,
     value: string,
-    options?: Parameters<typeof cookieStore.set>[0]
+    options?: Parameters<typeof cookieStore.set>[2]
   ) => {
     try {
-      cookieStore.set({ name, value, ...options });
+      cookieStore.set(name, value, options);
     } catch {
       // In Server Components, Next.js disallows mutating cookies. Ignore set failures here.
     }

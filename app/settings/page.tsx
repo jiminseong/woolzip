@@ -36,10 +36,7 @@ export default async function SettingsPage() {
       <main className="flex-1 px-4 pb-24 space-y-4">
         <InviteCodeManager />
 
-        <QuizScheduleForm
-          initialTime={quizSchedule?.time_of_day || null}
-          initialTimezone={quizSchedule?.timezone || "Asia/Seoul"}
-        />
+        <QuizScheduleForm initialTime={quizSchedule?.time_of_day || null} />
 
         <div className="card">
           <div className="text-lg font-semibold mb-2">환경 설정</div>
