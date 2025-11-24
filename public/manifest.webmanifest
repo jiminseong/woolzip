@@ -10,7 +10,7 @@
   "display": "standalone",
   "display_override": ["standalone", "browser"],
   "orientation": "portrait-primary",
-  "theme_color": "#3b82f6",
+  "theme_color": "#f3f6fb",
   "background_color": "#f3f6fb",
   "categories": ["lifestyle", "health", "productivity"],
   "icons": [
