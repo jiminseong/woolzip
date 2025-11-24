@@ -5,13 +5,32 @@ import TimelineItem from "@/components/TimelineItem";
 import RealtimeProvider from "@/components/RealtimeProvider";
 import { getSession, createSupabaseServerClient } from "@/lib/supabase/server";
 
+const TIME_ZONE = "Asia/Seoul";
+const timeFormatter = new Intl.DateTimeFormat("ko-KR", {
+  timeZone: TIME_ZONE,
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+function startOfTodayKst() {
+  const now = new Date();
+  const kstMs = now.getTime() + 9 * 60 * 60 * 1000; // UTC -> KST
+  const kst = new Date(kstMs);
+  kst.setHours(0, 0, 0, 0);
+  return new Date(kst.getTime() - 9 * 60 * 60 * 1000); // back to UTC boundary
+}
+
+function formatKstTime(value: string | Date) {
+  const date = typeof value === "string" ? new Date(value) : value;
+  return timeFormatter.format(date);
+}
+
 async function getFamilyData(
   supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   familyId: string,
   familyName: string | null
 ) {
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
+  const todayStart = startOfTodayKst();
 
   const [membersResult, signalsResult, medLogsResult, emotionsResult] = await Promise.all([
     (supabase.from("family_members") as any)
@@ -91,10 +110,7 @@ async function getFamilyData(
       id: s.id,
       kind: "signal" as const,
       title: `${s.users?.display_name || "누군가"} · ${getSignalText(s.type, s.tag)}`,
-      time: new Date(s.created_at).toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      time: formatKstTime(s.created_at),
       color: s.type as "green" | "yellow" | "red",
       timestamp: new Date(s.created_at),
     })),
@@ -104,20 +120,14 @@ async function getFamilyData(
       title: `${m.users?.display_name || "누군가"} · ${
         m.medications?.name || "약"
       } 복용 (${getTimeSlotText(m.time_slot)})`,
-      time: new Date(m.taken_at).toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      time: formatKstTime(m.taken_at),
       timestamp: new Date(m.taken_at),
     })),
     ...emotions.map((e: any) => ({
       id: e.id,
       kind: "emotion" as const,
       title: `${e.users?.display_name || "누군가"} · ${e.emoji}${e.text ? ` ${e.text}` : ""}`,
-      time: new Date(e.created_at).toLocaleTimeString("ko-KR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      time: formatKstTime(e.created_at),
       timestamp: new Date(e.created_at),
     })),
     ...members
@@ -126,10 +136,7 @@ async function getFamilyData(
         id: `join-${m.user_id}`,
         kind: "join" as const,
         title: `${m.users?.display_name || "새 가족"} · 가족에 참여했어요`,
-        time: new Date(m.joined_at).toLocaleTimeString("ko-KR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        time: formatKstTime(m.joined_at),
         timestamp: new Date(m.joined_at),
       })),
   ].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
@@ -145,9 +152,7 @@ async function getFamilyData(
 
     const lastSignal = memberSignals[0];
     const lastActivity = lastSignal
-      ? `${getSignalText(lastSignal.type, lastSignal.tag)} ${new Date(
-          lastSignal.created_at
-        ).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}`
+      ? `${getSignalText(lastSignal.type, lastSignal.tag)} ${formatKstTime(lastSignal.created_at)}`
       : "아직 없음";
 
     const hasMedToday = (medLogs || []).some(
@@ -155,10 +160,7 @@ async function getFamilyData(
     );
 
     const joinedAt = member.joined_at
-      ? new Date(member.joined_at).toLocaleTimeString("ko-KR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
+      ? formatKstTime(member.joined_at)
       : null;
 
     return {
