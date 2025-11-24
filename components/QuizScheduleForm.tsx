@@ -56,7 +56,7 @@ export default function QuizScheduleForm({
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="btn btn-green w-full disabled:opacity-60"
+          className="btn btn-primary w-full disabled:opacity-60"
         >
           {saving ? "저장 중..." : "저장"}
         </button>

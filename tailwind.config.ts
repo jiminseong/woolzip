@@ -10,8 +10,9 @@ const config: Config = {
       colors: {
         token: {
           signal: { green: '#22c55e', yellow: '#f59e0b', red: '#ef4444' },
-          text: { primary: '#111827', secondary: '#6b7280' },
-          bg: { base: '#ffffff', subtle: '#f9fafb' },
+          accent: '#3b82f6',
+          text: { primary: '#0f172a', secondary: '#475569' },
+          bg: { base: '#ffffff', subtle: '#f3f6fb' },
         },
       },
       borderRadius: {
@@ -29,4 +30,3 @@ const config: Config = {
 }
 
 export default config
-

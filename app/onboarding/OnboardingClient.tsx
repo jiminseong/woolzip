@@ -247,7 +247,7 @@ export default function OnboardingClient({
             <button
               onClick={handleProfileSubmit}
               disabled={loading || !displayName.trim()}
-              className="btn btn-green w-full disabled:opacity-50"
+              className="btn btn-primary w-full disabled:opacity-50"
             >
               {loading ? "저장 중..." : "다음 단계 →"}
             </button>
@@ -360,7 +360,7 @@ export default function OnboardingClient({
                 (familyChoice === "create" && !familyName.trim()) ||
                 (familyChoice === "join" && !inviteCode.trim())
               }
-              className="btn btn-green w-full disabled:opacity-50"
+              className="btn btn-primary w-full disabled:opacity-50"
             >
               {loading ? "설정 중..." : "가족 설정 완료 🎉"}
             </button>
@@ -389,7 +389,7 @@ export default function OnboardingClient({
               <p>🚀 이제 가족 안부를 공유해보세요!</p>
             </div>
 
-            <button onClick={handleComplete} className="btn btn-green w-full">
+            <button onClick={handleComplete} className="btn btn-primary w-full">
               울집으로 들어가기 🏠
             </button>
           </div>

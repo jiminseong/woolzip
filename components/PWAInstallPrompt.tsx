@@ -103,7 +103,7 @@ export default function PWAInstallPrompt() {
             빠른 실행과 푸시 알림을 위해 홈 화면에 추가하세요.
           </p>
           <div className="mt-3 flex items-center gap-2">
-            <button onClick={handleInstall} className="btn btn-green flex-1 h-10">
+            <button onClick={handleInstall} className="btn btn-primary flex-1 h-10">
               설치하기
             </button>
             <button

@@ -104,7 +104,7 @@ export default function PushPermissionToggle() {
           type="button"
           onClick={requestPermission}
           disabled={status === "loading" || status === "granted"}
-          className={`btn btn-green h-10 px-3 text-sm ${
+          className={`btn btn-primary h-10 px-3 text-sm ${
             status === "granted" ? "opacity-60 cursor-default" : ""
           }`}
         >

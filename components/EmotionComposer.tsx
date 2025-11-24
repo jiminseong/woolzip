@@ -65,7 +65,7 @@ export default function EmotionComposer() {
             </button>
           ))}
         </div>
-        <div className="bg-green-300 w-full px-4 gap-2 h-12 rounded-2xl flex justify-center items-center  text-3xl">
+        <div className="bg-blue-300 w-full px-4 gap-2 h-12 rounded-2xl flex justify-center items-center  text-3xl">
           <span className="text-lg">내 기분은 :</span> {emoji}
         </div>
       </div>
@@ -77,7 +77,7 @@ export default function EmotionComposer() {
         maxLength={60}
       />
       <button
-        className="btn btn-green disabled:opacity-50"
+        className="btn btn-primary disabled:opacity-50"
         onClick={handleShare}
         disabled={posting}
       >

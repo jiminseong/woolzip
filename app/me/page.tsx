@@ -53,23 +53,7 @@ export default async function MePage() {
       <main className="flex-1 px-4 pb-24 space-y-4">
         <InviteCodeManager />
 
-        <div className="card">
-          <div className="text-lg font-semibold mb-2">설정</div>
-          <div className="space-y-3 text-sm">
-            <LargeFontToggle />
-            <PushPermissionToggle />
-          </div>
-          <div className="pt-4">
-            <SignOutButton />
-          </div>
-        </div>
-
-        <QuizScheduleForm
-          initialTime={quizSchedule?.time_of_day || null}
-          initialTimezone={quizSchedule?.timezone || "Asia/Seoul"}
-        />
-
-        <div className="card">
+        <div className="card" id="meds">
           <div className="text-lg font-semibold mb-2">약 관리</div>
           <MedicationManager initial={medications || []} />
           {medications && medications.length > 0 && (
@@ -111,6 +95,22 @@ export default async function MePage() {
               ))}
             </div>
           )}
+        </div>
+
+        <QuizScheduleForm
+          initialTime={quizSchedule?.time_of_day || null}
+          initialTimezone={quizSchedule?.timezone || "Asia/Seoul"}
+        />
+
+        <div className="card" id="settings">
+          <div className="text-lg font-semibold mb-2">설정</div>
+          <div className="space-y-3 text-sm">
+            <LargeFontToggle />
+            <PushPermissionToggle />
+          </div>
+          <div className="pt-4">
+            <SignOutButton />
+          </div>
         </div>
 
         <EmotionComposer />

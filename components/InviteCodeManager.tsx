@@ -64,7 +64,7 @@ export default function InviteCodeManager() {
         <button
           onClick={generateCode}
           disabled={loading}
-          className="btn btn-green w-full disabled:opacity-50"
+          className="btn btn-primary w-full disabled:opacity-50"
         >
           {loading ? "생성 중..." : "초대 코드 생성하기"}
         </button>

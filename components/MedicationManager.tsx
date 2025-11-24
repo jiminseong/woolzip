@@ -120,7 +120,7 @@ export default function MedicationManager({ initial }: { initial: Medication[] }
           type="button"
           onClick={handleAdd}
           disabled={saving}
-          className="btn btn-green w-full disabled:opacity-50"
+          className="btn btn-primary w-full disabled:opacity-50"
         >
           {saving ? "저장 중..." : "약 추가하기"}
         </button>

@@ -122,7 +122,7 @@ export default function QuizClient({
             type="button"
             onClick={handleSubmit}
             disabled={submitting}
-            className="btn btn-green w-full disabled:opacity-60"
+            className="btn btn-primary w-full disabled:opacity-60"
           >
             {submitting ? "제출 중..." : "답변 제출"}
           </button>
