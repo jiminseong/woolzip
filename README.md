@@ -38,6 +38,7 @@ NEXT_PUBLIC_KAKAO_CLIENT_ID=...
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 NEXT_PUBLIC_VAPID_KEY=...        # Web Push 공개키
 VAPID_PRIVATE_KEY=...            # Web Push 비밀키
+QUIZ_CRON_SECRET=...             # 퀴즈 인스턴스 생성/마감용 cron 보호 키
 ```
 
 3) 개발 서버  
@@ -60,6 +61,7 @@ npm run dev
 - 설치 유도: `components/PWAInstallPrompt`에서 Android/데스크톱 A2HS, iOS 홈화면 추가 배너.
 - 푸시 등록: `components/PushPermissionToggle` → `/api/devices/register`로 구독 저장.
 - 퀴즈 알림: `/api/quiz/schedule`로 가족별 알림 시각 설정, Scheduler/Edge Function에서 인스턴스 생성·푸시 발송 후 `/api/quiz/today`로 상태 조회.
+  - 스케줄러 호출: `POST /api/quiz/cron` (헤더 `Authorization: Bearer ${QUIZ_CRON_SECRET}`) → 미생성 인스턴스 생성 + 만료/모두응답 상태 마감.
 
 ## 약 복용 플로우
 - 약 등록: 이름 + 시간대(아침/점심/저녁) 저장.
