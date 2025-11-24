@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import BottomNav from "@/components/BottomNav";
 import { getSession, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function QuizHistoryPage() {
@@ -59,6 +60,7 @@ export default async function QuizHistoryPage() {
           ))
         )}
       </main>
+      <BottomNav />
     </div>
   );
 }

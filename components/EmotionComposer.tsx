@@ -39,9 +39,9 @@ export default function EmotionComposer() {
   if (shared) {
     return (
       <div className="card text-center space-y-3">
-        <div className="  text-4xl">{emoji}</div>
+        <div className="text-4xl">{emoji}</div>
         <div>
-          <div className="font-medium text-token-signal-green">감정이 공유되었습니다!</div>
+          <div className="font-medium text-token-accent">감정이 공유되었습니다!</div>
           <div className="text-sm text-token-text-secondary">오늘은 이미 감정을 공유했어요</div>
         </div>
       </div>
@@ -52,12 +52,12 @@ export default function EmotionComposer() {
     <div className="card flex flex-col gap-3">
       <div className="text-sm font-medium">오늘 기분은 어떤가요?</div>
       <div className="flex w-full flex-col gap-2">
-        <div className="items-center  gap-2  content-center  grid grid-cols-6 grid-rows-2">
+        <div className="items-center gap-2 content-center grid grid-cols-6 grid-rows-2">
           {emojis.map((e) => (
             <button
               key={e}
               className={`btn h-full w-full text-xl rounded-full flex justify-center items-center ${
-                emoji === e ? "bg-token-signal-green text-white" : "bg-neutral-100"
+                emoji === e ? "bg-token-accent text-white" : "bg-neutral-100"
               }`}
               onClick={() => setEmoji(e)}
             >
@@ -65,14 +65,14 @@ export default function EmotionComposer() {
             </button>
           ))}
         </div>
-        <div className="bg-blue-300 w-full px-4 gap-2 h-12 rounded-2xl flex justify-center items-center  text-3xl">
+        <div className="bg-token-accent/10 text-token-accent w-full px-4 gap-2 h-12 rounded-2xl flex justify-center items-center text-3xl">
           <span className="text-lg">내 기분은 :</span> {emoji}
         </div>
       </div>
       <input
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="w-full rounded-xl border border-neutral-200 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
+        className="w-full rounded-xl border border-neutral-200 p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-accent/50"
         placeholder="한 줄로 오늘 기분 (선택사항)"
         maxLength={60}
       />

@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import QuizClient from "@/components/QuizClient";
+import BottomNav from "@/components/BottomNav";
 import { getSession, createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function QuizPage() {
@@ -81,6 +82,7 @@ export default async function QuizPage() {
           currentUserId={session.user.id}
         />
       </main>
+      <BottomNav />
     </div>
   );
 }
