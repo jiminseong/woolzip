@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description: "하루 10초, 우리 가족 안심",
   applicationName: "울집 Woolzip",
   manifest: "/manifest.webmanifest",
-  themeColor: "#10b981",
+  themeColor: "#3b82f6",
   icons: {
     icon: [
       { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
