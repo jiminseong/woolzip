@@ -115,7 +115,7 @@ export default function QuizClient({
             value={answerText}
             onChange={(e) => setAnswerText(e.target.value)}
             placeholder="짧게 남겨주세요"
-            className="w-full rounded-lg border border-neutral-200 bg-white p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
+            className="w-full rounded-lg border border-neutral-200 bg-white p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-accent/50"
             rows={3}
           />
           <button
@@ -142,7 +142,7 @@ export default function QuizClient({
                 key={m.user_id}
                 type="button"
                 onClick={() => sendNudge(m.user_id)}
-                className="rounded-full border border-neutral-200 px-3 py-1 text-xs bg-white hover:border-token-signal-green"
+                className="rounded-full border border-neutral-200 px-3 py-1 text-xs bg-white hover:border-token-accent"
               >
                 {m.display_name}에게 요청
               </button>

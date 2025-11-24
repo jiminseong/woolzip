@@ -91,7 +91,7 @@ export default function MedicationManager({ initial }: { initial: Medication[] }
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="예: 혈압약, 고지혈증약"
-            className="mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
+            className="mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-accent/50"
             maxLength={30}
           />
         </label>
@@ -105,8 +105,8 @@ export default function MedicationManager({ initial }: { initial: Medication[] }
               onClick={() => toggleTime(opt.value)}
               className={`h-11 rounded-lg border text-sm transition-colors ${
                 times.includes(opt.value)
-                  ? "border-token-signal-green bg-green-50 text-token-signal-green"
-                  : "border-neutral-200 bg-white hover:border-token-signal-green"
+                  ? "border-token-accent bg-token-accent/10 text-token-accent"
+                  : "border-neutral-200 bg-white hover:border-token-accent"
               }`}
             >
               {opt.label}

@@ -46,7 +46,7 @@ export default function LargeFontToggle() {
       <button
         type="button"
         onClick={handleToggle}
-        className="rounded-lg border border-neutral-200 px-3 py-2 text-sm bg-white hover:border-token-signal-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
+        className="rounded-lg border border-neutral-200 px-3 py-2 text-sm bg-white hover:border-token-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-accent/50"
       >
         {label}
       </button>

@@ -156,7 +156,7 @@ export default function LoginForm() {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="영문, 숫자로 입력해주세요"
-            className="w-full h-12 px-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-token-signal-green focus:border-transparent"
+            className="w-full h-12 px-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-token-accent/50 focus:border-transparent"
             autoComplete={isSignUp ? "username" : "username"}
           />
         </div>
@@ -171,7 +171,7 @@ export default function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder={isSignUp ? "6자 이상 입력해주세요" : "비밀번호를 입력해주세요"}
-            className="w-full h-12 px-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-token-signal-green focus:border-transparent"
+            className="w-full h-12 px-4 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-token-accent/50 focus:border-transparent"
             autoComplete={isSignUp ? "new-password" : "current-password"}
             minLength={isSignUp ? 6 : undefined}
           />
@@ -180,7 +180,7 @@ export default function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-12 bg-token-signal-green hover:bg-green-600 text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full h-12 bg-token-accent hover:bg-blue-600 text-white font-medium rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {loading ? "처리 중..." : isSignUp ? "🎉 계정 만들기" : "로그인하기"}
         </button>
@@ -192,7 +192,7 @@ export default function LoginForm() {
               setIsSignUp(!isSignUp);
               setError(null);
             }}
-            className="text-sm text-token-text-secondary hover:text-token-signal-green underline"
+            className="text-sm text-token-text-secondary hover:text-token-accent underline"
           >
             {isSignUp ? "이미 계정이 있으신가요? 로그인하기" : "처음 오셨나요? 계정 만들기"}
           </button>
@@ -202,8 +202,8 @@ export default function LoginForm() {
       {isSignUp && (
         <div className="text-xs text-token-text-secondary text-center px-4">
           가입하면 울집의{" "}
-          <button className="underline hover:text-token-signal-green">서비스 약관</button>과{" "}
-          <button className="underline hover:text-token-signal-green">개인정보 처리방침</button>에
+          <button className="underline hover:text-token-accent">서비스 약관</button>과{" "}
+          <button className="underline hover:text-token-accent">개인정보 처리방침</button>에
           동의하는 것으로 간주됩니다.
         </div>
       )}

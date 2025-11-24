@@ -108,7 +108,7 @@ export default function PWAInstallPrompt() {
             </button>
             <button
               onClick={dismissInstall}
-              className="text-xs text-token-text-secondary hover:text-token-signal-green"
+              className="text-xs text-token-text-secondary hover:text-token-accent"
             >
               나중에
             </button>
@@ -127,7 +127,7 @@ export default function PWAInstallPrompt() {
             </div>
             <button
               onClick={dismissIos}
-              className="text-xs text-token-text-secondary hover:text-token-signal-green"
+              className="text-xs text-token-text-secondary hover:text-token-accent"
             >
               닫기
             </button>

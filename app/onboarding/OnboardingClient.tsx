@@ -203,7 +203,7 @@ export default function OnboardingClient({
                   required
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="w-full rounded-xl border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
+                  className="w-full rounded-xl border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-accent/50"
                   placeholder="예: 엄마, 아빠, 큰아들"
                   maxLength={20}
                 />
@@ -227,8 +227,8 @@ export default function OnboardingClient({
                     onClick={() => setRole(option.value as typeof role)}
                     className={`p-3 rounded-xl border text-center transition-colors ${
                       role === option.value
-                        ? "border-token-signal-green bg-green-50 text-token-signal-green"
-                        : "border-neutral-200 bg-white hover:border-token-signal-green"
+                        ? "border-token-accent bg-token-accent/10 text-token-accent"
+                        : "border-neutral-200 bg-white hover:border-token-accent"
                     }`}
                   >
                     <div className="text-sm font-medium">{option.label}</div>
@@ -270,7 +270,7 @@ export default function OnboardingClient({
               <button
                 type="button"
                 onClick={() => setStep("profile")}
-                className="text-sm text-token-signal-green underline"
+                className="text-sm text-token-accent underline"
               >
                 이름/역할 수정
               </button>
@@ -288,8 +288,8 @@ export default function OnboardingClient({
                   onClick={() => setFamilyChoice("create")}
                   className={`p-4 rounded-xl border text-center transition-colors ${
                     familyChoice === "create"
-                      ? "border-token-signal-green bg-green-50 text-token-signal-green"
-                      : "border-neutral-200 bg-white hover:border-token-signal-green"
+                      ? "border-token-accent bg-token-accent/10 text-token-accent"
+                      : "border-neutral-200 bg-white hover:border-token-accent"
                   }`}
                 >
                   <div className="text-2xl mb-1">🆕</div>
@@ -300,8 +300,8 @@ export default function OnboardingClient({
                   onClick={() => setFamilyChoice("join")}
                   className={`p-4 rounded-xl border text-center transition-colors ${
                     familyChoice === "join"
-                      ? "border-token-signal-green bg-green-50 text-token-signal-green"
-                      : "border-neutral-200 bg-white hover:border-token-signal-green"
+                      ? "border-token-accent bg-token-accent/10 text-token-accent"
+                      : "border-neutral-200 bg-white hover:border-token-accent"
                   }`}
                 >
                   <div className="text-2xl mb-1">👨‍👩‍👧‍👦</div>
@@ -319,7 +319,7 @@ export default function OnboardingClient({
                     required
                     value={familyName}
                     onChange={(e) => setFamilyName(e.target.value)}
-                    className="w-full rounded-xl border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
+                    className="w-full rounded-xl border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-accent/50"
                     placeholder="예: 김씨 가족, 우리 가족"
                     maxLength={30}
                   />
@@ -336,7 +336,7 @@ export default function OnboardingClient({
                     required
                     value={inviteCode}
                     onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                    className="w-full rounded-xl border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green font-mono"
+                    className="w-full rounded-xl border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-accent/50 font-mono"
                     placeholder="예: FAMILY123"
                     maxLength={10}
                   />
@@ -377,7 +377,7 @@ export default function OnboardingClient({
           <div className="card text-center space-y-6 max-w-md mx-auto">
             <div className="text-6xl">🎉</div>
             <div>
-              <div className="text-xl font-bold text-token-signal-green mb-2">환영합니다!</div>
+              <div className="text-xl font-bold text-token-accent mb-2">환영합니다!</div>
               <p className="text-token-text-secondary">
                 이제 가족과 함께 안심 신호를 주고받을 수 있어요.
               </p>

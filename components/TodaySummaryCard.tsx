@@ -19,7 +19,7 @@ export default function TodaySummaryCard({ members }: { members: Member[] }) {
             <div className="text-sm">초록/노랑/빨강: {m.gyrc.g}/{m.gyrc.y}/{m.gyrc.r}</div>
             <div
               className={`text-sm ${
-                m.med ? "text-token-signal-green" : "text-token-text-secondary"
+                m.med ? "text-token-accent" : "text-token-text-secondary"
               }`}
             >
               약: {m.med ? "○" : "—"}

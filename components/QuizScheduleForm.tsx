@@ -49,7 +49,7 @@ export default function QuizScheduleForm({
             type="time"
             value={time}
             onChange={(e) => setTime(e.target.value)}
-            className="mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-signal-green"
+            className="mt-1 w-full rounded-lg border border-neutral-200 bg-white p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-token-accent/50"
           />
         </label>
         <button

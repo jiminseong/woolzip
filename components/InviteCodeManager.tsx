@@ -73,7 +73,7 @@ export default function InviteCodeManager() {
           <div className="bg-token-bg-subtle p-4 rounded-xl">
             <div className="text-sm text-token-text-secondary mb-1">초대 코드</div>
             <div className="flex items-center gap-2">
-              <div className="font-mono text-2xl font-bold text-token-signal-green">
+              <div className="font-mono text-2xl font-bold text-token-accent">
                 {inviteCode}
               </div>
               <button
@@ -111,7 +111,7 @@ export default function InviteCodeManager() {
                   copyCode();
                 }
               }}
-              className="btn flex-1 bg-token-signal-green hover:bg-green-600 text-white"
+              className="btn flex-1 bg-token-accent hover:bg-blue-600 text-white"
             >
               공유하기
             </button>
