@@ -136,7 +136,7 @@ export default function QuizClient({
     );
   }
 
-  const pendingList = pending.filter((m) => !m.answered);
+  const pendingList = memberState.filter((m) => !m.answered);
 
   return (
     <div className="card space-y-4">
