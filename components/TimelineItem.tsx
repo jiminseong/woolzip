@@ -1,22 +1,19 @@
-type Kind = "signal" | "med" | "emotion" | "join";
-
-const kindLabel: Record<Kind, string> = {
-  signal: "신호",
-  med: "복용",
-  emotion: "감정",
-  join: "참여",
-};
+import type { CSSProperties } from "react";
 
 export default function TimelineItem({
-  kind,
-  title,
   time,
-  color,
+  name,
+  body,
+  color = "green",
+  isFirst = false,
+  isLast = false,
 }: {
-  kind: Kind;
-  title: string;
   time: string;
+  name: string;
+  body: string;
   color?: "green" | "yellow" | "red";
+  isFirst?: boolean;
+  isLast?: boolean;
 }) {
   const dot =
     color === "green"
@@ -26,15 +23,26 @@ export default function TimelineItem({
       : color === "red"
       ? "bg-token-signal-red"
       : "bg-neutral-300";
+
+  const lineStyle: CSSProperties = {
+    top: isFirst ? "1.2rem" : "-1.25rem",
+    bottom: isLast ? "1.2rem" : "-1.25rem",
+  };
+
   return (
-    <div className="flex items-center gap-3 py-2">
-      <div className={`w-2.5 h-2.5 rounded-full ${dot}`} />
-      <div className="flex-1">
-        <div className="font-medium leading-tight">{title}</div>
-        <div className="text-sm text-token-text-secondary leading-tight mt-1">{time}</div>
-      </div>
-      <div className="text-[11px]  text-token-text-secondary bg-neutral-100 rounded-full px-2 py-1">
-        {kindLabel[kind]}
+    <div className="grid grid-cols-[64px_1fr] gap-3">
+      <div className="pt-2 text-sm text-token-text-secondary whitespace-nowrap">{time}</div>
+      <div className="relative pl-6">
+        <div
+          className="absolute left-[9px] w-px bg-neutral-200"
+          style={lineStyle}
+          aria-hidden
+        />
+        <div className={`absolute left-0 top-3 h-3 w-3 rounded-full ${dot}`} aria-hidden />
+        <div className="rounded-2xl border border-neutral-200 bg-white shadow-sm px-4 py-3 space-y-1">
+          <div className="font-semibold text-token-text-primary">{name}</div>
+          <div className="text-base text-token-text-primary leading-snug">{body}</div>
+        </div>
       </div>
     </div>
   );
