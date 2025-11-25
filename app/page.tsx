@@ -40,7 +40,8 @@ async function getFamilyData(
         role,
         joined_at,
         users:user_id (
-          display_name
+          display_name,
+          username
         )
       `
       )
@@ -55,7 +56,8 @@ async function getFamilyData(
         note,
         created_at,
         users:user_id (
-          display_name
+          display_name,
+          username
         )
       `
       )
@@ -70,7 +72,8 @@ async function getFamilyData(
         time_slot,
         taken_at,
         users:user_id (
-          display_name
+          display_name,
+          username
         ),
         medications:medication_id (
           name
@@ -89,7 +92,8 @@ async function getFamilyData(
         text,
         created_at,
         users:user_id (
-          display_name
+          display_name,
+          username
         )
       `
       )
@@ -104,12 +108,15 @@ async function getFamilyData(
   const medLogs = medLogsResult?.data || [];
   const emotions = emotionsResult?.data || [];
 
+  const getDisplayName = (u?: { display_name?: string | null; username?: string | null }) =>
+    u?.display_name || u?.username || "가족";
+
   // 타임라인 통합
   const timeline = [
     ...signals.map((s: any) => ({
       id: s.id,
       kind: "signal" as const,
-      title: `${s.users?.display_name || "누군가"} · ${getSignalText(s.type, s.tag)}`,
+      title: `${getDisplayName(s.users) || "누군가"} · ${getSignalText(s.type, s.tag)}`,
       time: formatKstTime(s.created_at),
       color: s.type as "green" | "yellow" | "red",
       timestamp: new Date(s.created_at),
@@ -117,7 +124,7 @@ async function getFamilyData(
     ...medLogs.map((m: any) => ({
       id: m.id,
       kind: "med" as const,
-      title: `${m.users?.display_name || "누군가"} · ${
+      title: `${getDisplayName(m.users) || "누군가"} · ${
         m.medications?.name || "약"
       } 복용 (${getTimeSlotText(m.time_slot)})`,
       time: formatKstTime(m.taken_at),
@@ -126,7 +133,9 @@ async function getFamilyData(
     ...emotions.map((e: any) => ({
       id: e.id,
       kind: "emotion" as const,
-      title: `${e.users?.display_name || "누군가"} · ${e.emoji}${e.text ? ` ${e.text}` : ""}`,
+      title: `${getDisplayName(e.users) || "누군가"} · ${e.emoji}${
+        e.text ? ` ${e.text}` : ""
+      }`,
       time: formatKstTime(e.created_at),
       timestamp: new Date(e.created_at),
     })),
@@ -135,7 +144,7 @@ async function getFamilyData(
       .map((m: any) => ({
         id: `join-${m.user_id}`,
         kind: "join" as const,
-        title: `${m.users?.display_name || "새 가족"} · 가족에 참여했어요`,
+        title: `${getDisplayName(m.users) || "새 가족"} · 가족에 참여했어요`,
         time: formatKstTime(m.joined_at),
         timestamp: new Date(m.joined_at),
       })),
@@ -143,7 +152,10 @@ async function getFamilyData(
 
   // 구성원별 오늘 요약 생성
   const memberSummaries = members.map((member: any) => {
-    const memberSignals = signals.filter((s: any) => s.users?.display_name === member.users?.display_name);
+    const displayName = getDisplayName(member.users);
+    const memberSignals = signals.filter(
+      (s: any) => getDisplayName(s.users) === displayName
+    );
     const gyrc = {
       g: memberSignals.filter((s: any) => s.type === "green").length,
       y: memberSignals.filter((s: any) => s.type === "yellow").length,
@@ -165,7 +177,7 @@ async function getFamilyData(
 
     return {
       id: member.user_id,
-      name: member.users?.display_name || "알 수 없음",
+      name: displayName,
       last: lastActivity,
       gyrc,
       med: hasMedToday,

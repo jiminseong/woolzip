@@ -52,7 +52,19 @@ export async function getSession(): Promise<{
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.getSession();
   if (error) {
-    throw error;
+    const message = error.message?.toLowerCase?.() ?? "";
+    if (message.includes("refresh token")) {
+      // Invalid/expired refresh token: clear auth and treat as signed out
+      try {
+        await supabase.auth.signOut();
+      } catch (signOutError) {
+        console.error("supabase signOut after refresh error failed", signOutError);
+      }
+      return { session: null, supabase };
+    }
+
+    console.error("supabase getSession error", error);
+    return { session: null, supabase };
   }
   return { session: data.session, supabase };
 }

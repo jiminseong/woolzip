@@ -41,6 +41,7 @@ export default function PWAInstallPrompt() {
 
   // Register service worker
   useEffect(() => {
+    if (process.env.NODE_ENV !== "production") return; // 개발 환경에서는 SW 캐시를 끕니다.
     if (!("serviceWorker" in navigator)) return;
     navigator.serviceWorker.register("/sw.js").catch(() => {});
   }, []);
