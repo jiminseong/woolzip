@@ -32,7 +32,8 @@ export async function GET(req: NextRequest) {
       question_responses (
         user_id,
         answer_text,
-        created_at
+        created_at,
+        users:user_id (display_name)
       )
     `
     )

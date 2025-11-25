@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Member = { user_id: string; display_name: string; answered: boolean };
 type Answer = { user_id: string; display_name: string; answer_text: string };
@@ -28,13 +28,54 @@ export default function QuizClient({
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(members);
+  const [memberState, setMemberState] = useState(members);
   const [answeredState, setAnsweredState] = useState(myAnswered);
   const [answerList, setAnswerList] = useState(answers);
+  const [statusState, setStatusState] = useState(status);
+  const [expiresAt, setExpiresAt] = useState(expires_at);
+
+  useEffect(() => {
+    setMemberState(members);
+    setAnsweredState(myAnswered);
+    setAnswerList(answers);
+    setStatusState(status);
+    setExpiresAt(expires_at);
+  }, [members, myAnswered, answers, status, expires_at, instanceId]);
+
+  useEffect(() => {
+    if (!instanceId) return;
+    let cancelled = false;
+    const tick = async () => {
+      try {
+        const res = await fetch("/api/quiz/today");
+        const data = await res.json();
+        if (!res.ok || !data?.ok || !data.data || cancelled) return;
+        const incoming = data.data;
+        // Only apply if same instance/day
+        if (incoming.instance_id !== instanceId) return;
+        setStatusState(incoming.status);
+        setExpiresAt(incoming.expires_at);
+        setAnsweredState(incoming.my_answered);
+        setMemberState(incoming.members || []);
+        if (incoming.status === "closed") {
+          setAnswerList(incoming.answers || []);
+        }
+      } catch (e) {
+        // ignore polling errors
+      }
+    };
+
+    tick();
+    const id = setInterval(tick, 15000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [instanceId]);
 
   const remaining = useMemo(
-    () => pending.filter((m) => !m.answered && m.user_id !== null),
-    [pending]
+    () => memberState.filter((m) => !m.answered && m.user_id !== null),
+    [memberState]
   );
 
   const handleSubmit = async () => {
@@ -55,7 +96,7 @@ export default function QuizClient({
       }
       setAnsweredState(true);
       setMessage("답변이 저장되었어요. 가족이 모두 답변하면 공개됩니다.");
-      setPending((prev) =>
+      setMemberState((prev) =>
         prev.map((m) => (m.user_id === currentUserId ? { ...m, answered: true } : m))
       );
     } catch (e) {
@@ -102,14 +143,14 @@ export default function QuizClient({
       <div>
         <div className="text-xs text-token-text-secondary">오늘의 질문</div>
         <div className="text-lg font-semibold mt-1 leading-snug">{prompt}</div>
-        {expires_at && (
+        {expiresAt && (
           <div className="text-xs text-token-text-secondary mt-1">
-            마감: {new Date(expires_at).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+            마감: {new Date(expiresAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
           </div>
         )}
       </div>
 
-      {status === "open" && !answeredState && (
+      {statusState === "open" && !answeredState && (
         <div className="space-y-2">
           <textarea
             value={answerText}
@@ -129,11 +170,11 @@ export default function QuizClient({
         </div>
       )}
 
-      {status === "open" && answeredState && (
+      {statusState === "open" && answeredState && (
         <div className="text-sm text-token-text-secondary">답변을 저장했어요. 가족 응답을 기다리는 중입니다.</div>
       )}
 
-      {status === "open" && pendingList.length > 0 && (
+      {statusState === "open" && pendingList.length > 0 && (
         <div className="space-y-2">
           <div className="text-sm font-medium">아직 대기 중인 가족</div>
           <div className="flex flex-wrap gap-2">
@@ -151,7 +192,7 @@ export default function QuizClient({
         </div>
       )}
 
-      {status === "closed" && (
+      {statusState === "closed" && (
         <div className="space-y-2">
           <div className="text-sm font-medium">가족 답변</div>
           {answerList.length === 0 ? (

@@ -73,7 +73,7 @@ npm run dev
 - 스케줄: `question_schedule`에 가족별 알림 시각 저장(타임존 포함).
 - 인스턴스: Scheduler/Edge Function이 매일 `question_instances` 생성 후 푸시 발송.
 - 응답/공개: `/api/quiz/today`로 질문·응답 상태 조회, `/api/quiz/respond`로 답변 제출, 모두 답변하거나 마감되면 공개.
-- 답변 요청: `/api/quiz/nudge`로 미응답자에게 알림 요청.
+- 답변 요청: `/api/quiz/nudge`로 미응답자에게 알림 요청(상대가 `settings.push_opt_in` 켜고 `/api/devices/register`로 푸시 구독이 있어야 알림 수신).
 - 히스토리: `/api/quiz/history`로 마감된 질문과 공개된 답변을 확인.
 
 ## 배포
