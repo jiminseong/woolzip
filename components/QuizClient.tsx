@@ -1,85 +1,68 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 type Member = { user_id: string; display_name: string; answered: boolean };
 type Answer = { user_id: string; display_name: string; answer_text: string };
 
-export default function QuizClient({
-  instanceId,
-  prompt,
-  status,
-  expires_at,
-  members,
-  answers,
-  myAnswered,
-  currentUserId,
-}: {
-  instanceId: string | null;
-  prompt: string | null;
-  status: "open" | "closed" | null;
+type QuizData = {
+  instance_id: string;
+  prompt: string;
+  status: "open" | "closed";
   expires_at: string | null;
+  my_answered: boolean;
+  answered_count: number;
   members: Member[];
   answers: Answer[];
-  myAnswered: boolean;
-  currentUserId: string;
-}) {
+};
+
+export default function QuizClient({ currentUserId }: { currentUserId: string }) {
   const [answerText, setAnswerText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [memberState, setMemberState] = useState(members);
-  const [answeredState, setAnsweredState] = useState(myAnswered);
-  const [answerList, setAnswerList] = useState(answers);
-  const [statusState, setStatusState] = useState(status);
-  const [expiresAt, setExpiresAt] = useState(expires_at);
+  const [quizData, setQuizData] = useState<QuizData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [blocked, setBlocked] = useState<string | null>(null); // before_time, depleted 등
 
-  useEffect(() => {
-    setMemberState(members);
-    setAnsweredState(myAnswered);
-    setAnswerList(answers);
-    setStatusState(status);
-    setExpiresAt(expires_at);
-  }, [members, myAnswered, answers, status, expires_at, instanceId]);
-
-  useEffect(() => {
-    if (!instanceId) return;
-    let cancelled = false;
-    const tick = async () => {
-      try {
-        const res = await fetch("/api/quiz/today");
-        const data = await res.json();
-        if (!res.ok || !data?.ok || !data.data || cancelled) return;
-        const incoming = data.data;
-        // Only apply if same instance/day
-        if (incoming.instance_id !== instanceId) return;
-        setStatusState(incoming.status);
-        setExpiresAt(incoming.expires_at);
-        setAnsweredState(incoming.my_answered);
-        setMemberState(incoming.members || []);
-        if (incoming.status === "closed") {
-          setAnswerList(incoming.answers || []);
-        }
-      } catch (e) {
-        // ignore polling errors
+  const fetchQuiz = async () => {
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const res = await fetch("/api/quiz/today");
+      const data = await res.json();
+      if (!res.ok || !data?.ok) {
+        const code = data?.error?.code || "error";
+        setBlocked(code);
+        setQuizData(null);
+        setError(
+          data?.error?.message ||
+            (code === "before_time"
+              ? "20시 이후에 이용할 수 있어요."
+              : code === "depleted"
+              ? "준비된 질문이 모두 소진되었습니다."
+              : "오늘의 질문을 불러오지 못했어요.")
+        );
+        return;
       }
-    };
+      setBlocked(null);
+      setQuizData(data.data);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "오늘의 질문을 불러오지 못했어요.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    tick();
-    const id = setInterval(tick, 15000);
-    return () => {
-      cancelled = true;
-      clearInterval(id);
-    };
-  }, [instanceId]);
-
-  const remaining = useMemo(
-    () => memberState.filter((m) => !m.answered && m.user_id !== null),
-    [memberState]
-  );
+  useEffect(() => {
+    fetchQuiz();
+    const id = setInterval(fetchQuiz, 15000);
+    return () => clearInterval(id);
+  }, []);
 
   const handleSubmit = async () => {
-    if (!instanceId || !prompt) return;
+    if (!quizData?.instance_id) return;
     setSubmitting(true);
     setError(null);
     setMessage(null);
@@ -87,18 +70,16 @@ export default function QuizClient({
       const res = await fetch("/api/quiz/respond", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionInstanceId: instanceId, answer_text: answerText }),
+        body: JSON.stringify({ questionInstanceId: quizData.instance_id, answer_text: answerText }),
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) {
+      if (!res.ok || !data?.ok) {
         setError(data?.error?.message || "제출에 실패했습니다");
         return;
       }
-      setAnsweredState(true);
-      setMessage("답변이 저장되었어요. 가족이 모두 답변하면 공개됩니다.");
-      setMemberState((prev) =>
-        prev.map((m) => (m.user_id === currentUserId ? { ...m, answered: true } : m))
-      );
+      setAnswerText("");
+      setMessage("답변이 저장되었어요.");
+      await fetchQuiz();
     } catch (e) {
       setError(e instanceof Error ? e.message : "제출 중 오류가 발생했습니다");
     } finally {
@@ -106,51 +87,53 @@ export default function QuizClient({
     }
   };
 
-  const sendNudge = async (toUserId: string) => {
-    if (!instanceId) return;
-    setError(null);
-    setMessage(null);
-    try {
-      const res = await fetch("/api/quiz/nudge", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questionInstanceId: instanceId, to_user_id: toUserId }),
-      });
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
-        setError(data?.error?.message || "요청을 보낼 수 없습니다");
-        return;
-      }
-      setMessage("답변 요청을 보냈어요.");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "요청 중 오류가 발생했습니다");
-    }
-  };
+  if (loading && !quizData && !blocked) {
+    return <div className="card">로딩 중...</div>;
+  }
 
-  if (!instanceId || !prompt) {
+  if (blocked && !quizData) {
     return (
-      <div className="card">
+      <div className="card space-y-2">
         <div className="font-medium">오늘의 질문</div>
-        <p className="text-sm text-token-text-secondary mt-1">아직 오늘의 질문이 도착하지 않았어요.</p>
+        <p className="text-sm text-token-text-secondary">
+          {error || "지금은 질문을 가져올 수 없습니다. 잠시 후 다시 시도해 주세요."}
+        </p>
+        <button onClick={fetchQuiz} className="btn w-full">
+          다시 시도
+        </button>
       </div>
     );
   }
 
-  const pendingList = memberState.filter((m) => !m.answered);
+  if (!quizData) {
+    return (
+      <div className="card space-y-2">
+        <div className="font-medium">오늘의 질문</div>
+        <p className="text-sm text-token-text-secondary">아직 오늘의 질문이 없습니다.</p>
+        <button onClick={fetchQuiz} className="btn w-full">
+          새로고침
+        </button>
+      </div>
+    );
+  }
+
+  const answeredState = quizData.my_answered;
+  const memberState = quizData.members;
+  const answerList = quizData.answers;
 
   return (
     <div className="card space-y-4">
-      <div>
-        <div className="text-xs text-token-text-secondary">오늘의 질문</div>
-        <div className="text-lg font-semibold mt-1 leading-snug">{prompt}</div>
-        {expiresAt && (
-          <div className="text-xs text-token-text-secondary mt-1">
-            마감: {new Date(expiresAt).toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
-          </div>
-        )}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs text-token-text-secondary">오늘의 질문</div>
+          <div className="text-lg font-semibold mt-1 leading-snug">{quizData.prompt}</div>
+        </div>
+        <button onClick={fetchQuiz} className="text-xs text-token-text-secondary underline">
+          새로고침
+        </button>
       </div>
 
-      {statusState === "open" && !answeredState && (
+      {!answeredState && (
         <div className="space-y-2">
           <textarea
             value={answerText}
@@ -162,7 +145,7 @@ export default function QuizClient({
           <button
             type="button"
             onClick={handleSubmit}
-            disabled={submitting}
+            disabled={submitting || answerText.trim().length === 0}
             className="btn btn-primary w-full disabled:opacity-60"
           >
             {submitting ? "제출 중..." : "답변 제출"}
@@ -170,43 +153,25 @@ export default function QuizClient({
         </div>
       )}
 
-      {statusState === "open" && answeredState && (
-        <div className="text-sm text-token-text-secondary">답변을 저장했어요. 가족 응답을 기다리는 중입니다.</div>
-      )}
-
-      {statusState === "open" && pendingList.length > 0 && (
+      {answerList.length > 0 && (
         <div className="space-y-2">
-          <div className="text-sm font-medium">아직 대기 중인 가족</div>
-          <div className="flex flex-wrap gap-2">
-            {pendingList.map((m) => (
-              <button
-                key={m.user_id}
-                type="button"
-                onClick={() => sendNudge(m.user_id)}
-                className="rounded-full border border-neutral-200 px-3 py-1 text-xs bg-white hover:border-token-accent"
-              >
-                {m.display_name}에게 요청
-              </button>
+          <div className="text-sm font-medium">가족 답변</div>
+          <div className="space-y-2">
+            {answerList.map((a) => (
+              <div key={a.user_id} className="rounded-lg bg-neutral-50 px-3 py-2">
+                <div className="text-sm font-medium">{a.display_name}</div>
+                <div className="text-sm text-token-text-secondary whitespace-pre-line">
+                  {a.answer_text || "—"}
+                </div>
+              </div>
             ))}
           </div>
         </div>
       )}
 
-      {statusState === "closed" && (
-        <div className="space-y-2">
-          <div className="text-sm font-medium">가족 답변</div>
-          {answerList.length === 0 ? (
-            <div className="text-sm text-token-text-secondary">답변이 없습니다.</div>
-          ) : (
-            <div className="space-y-2">
-              {answerList.map((a) => (
-                <div key={a.user_id} className="rounded-lg bg-neutral-50 px-3 py-2">
-                  <div className="text-sm font-medium">{a.display_name}</div>
-                  <div className="text-sm text-token-text-secondary whitespace-pre-line">{a.answer_text || "—"}</div>
-                </div>
-              ))}
-            </div>
-          )}
+      {memberState.length > 0 && (
+        <div className="text-xs text-token-text-secondary">
+          응답: {memberState.filter((m) => m.answered).length}/{memberState.length}
         </div>
       )}
 
