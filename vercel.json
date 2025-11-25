@@ -1,3 +1,0 @@
-{
-  "crons": [{ "path": "/api/quiz/cron", "schedule": "*/5 * * * *" }]
-}

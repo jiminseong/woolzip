@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient, getSession } from "@/lib/supabase/server";
+import { sendWebPush } from "@/lib/push";
 
 type RegisterBody = {
   pushToken?: string;
@@ -53,6 +54,24 @@ export async function POST(req: Request) {
       { ok: false, error: { code: "db_error", message: error.message } },
       { status: 500 }
     );
+  }
+
+  // push_opt_in 플래그 활성화 (설정이 없으면 upsert)
+  await (supabase.from("settings") as any)
+    .upsert({ user_id: session.user.id, push_opt_in: true }, { onConflict: "user_id" })
+    .eq("user_id", session.user.id);
+
+  // 테스트 푸시 전송 (사용자 디바이스에 확인용)
+  try {
+    await sendWebPush(pushToken, {
+      title: "울집 푸시 알림이 켜졌어요",
+      body: "알림을 받을 준비가 되었습니다.",
+      url: "/",
+      icon: "/icons/icon-192.png",
+    });
+  } catch (pushErr) {
+    console.error("test push send error", pushErr);
+    // 테스트 푸시 실패는 무시
   }
 
   return NextResponse.json({ ok: true });
